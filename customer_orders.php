@@ -7,7 +7,19 @@ if (!isset($_SESSION['username'])) {
   exit;
 }
 
-$transactions_query = "SELECT * FROM transactions ORDER BY transaction_date DESC";
+// Pagination setup
+$records_per_page = 20;
+$current_page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($current_page - 1) * $records_per_page;
+
+// Get total records
+$total_records_query = "SELECT COUNT(*) as total FROM transactions";
+$total_records_result = mysqli_query($conn, $total_records_query);
+$total_records = mysqli_fetch_assoc($total_records_result)['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+// Get paginated transactions
+$transactions_query = "SELECT * FROM transactions ORDER BY transaction_date DESC LIMIT $records_per_page OFFSET $offset";
 $transactions_result = mysqli_query($conn, $transactions_query);
 
 $monthly_sales_query = "
@@ -163,6 +175,51 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
         white-space: nowrap;
       }
     }
+
+    /* Pagination Styles */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-top: 30px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 10px;
+    }
+
+    .page-btn {
+      background-color: #004080;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      font-size: 14px;
+    }
+
+    .page-btn:hover {
+      background-color: #0059b3;
+    }
+
+    .page-info {
+      font-size: 14px;
+      font-weight: 600;
+      color: #004080;
+    }
+
+    @media (max-width: 768px) {
+      .pagination {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .page-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 
@@ -196,6 +253,21 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
           <?php } ?>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <?php if ($current_page > 1): ?>
+          <a href="?page=<?= $current_page - 1 ?>" class="page-btn">← Previous</a>
+        <?php endif; ?>
+
+        <span class="page-info">
+          Page <?= $current_page ?> of <?= $total_pages ?> (Total: <?= $total_records ?> records)
+        </span>
+
+        <?php if ($current_page < $total_pages): ?>
+          <a href="?page=<?= $current_page + 1 ?>" class="page-btn">Next →</a>
+        <?php endif; ?>
+      </div>
     </div>
 
     <!-- PAGE 2: SALES SUMMARY -->
