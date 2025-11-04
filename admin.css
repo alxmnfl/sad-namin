@@ -291,6 +291,52 @@
     .admin-panel th {
       background: #003366;
     }
+
+    /* Modal full width and less padding */
+    .modal-content {
+      margin: 0;
+      width: 100vw;
+      min-width: unset;
+      max-width: 100vw;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .modal-header {
+      padding: 12px 8px;
+      border-radius: 0;
+    }
+    .modal-header h2 {
+      font-size: 1rem;
+    }
+    .modal-form {
+      padding: 8px;
+    }
+    .form-row {
+      display: block;
+      grid-template-columns: none;
+      gap: 0;
+      margin-bottom: 0;
+    }
+    .form-row .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      font-size: 1rem;
+      padding: 10px;
+    }
+    .modal-footer {
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 8px;
+    }
+    .cancel-btn,
+    .submit-btn {
+      width: 100%;
+      font-size: 1rem;
+      padding: 12px 0;
+    }
   }
 
   /* ===============================
@@ -321,7 +367,7 @@
     display: flex;
     gap: 20px;
     margin: 0;
-    padding: 0;
+  padding: 0;
   }
 
   .admin-navbar ul li a {
@@ -351,11 +397,6 @@
     font-size: 15px;
     transition: all 0.3s ease;
   }
-  /* Responsive for burger */
-  @media (max-width: 768px) {
-    .burger {
-      display: block;
-    }
 
     .admin-navbar ul {
       display: none;
@@ -383,7 +424,7 @@
       display: block;
       width: 100%;
     }
-  }
+  
 
   /* ===============================
     SALES SUMMARY PAGE
@@ -455,21 +496,6 @@
 
   /* Add Stock Button (Red) */
   .update-btn {
-    background-color: #e74c3c;
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-
-  .update-btn:hover {
-    background-color: #c0392b;
-  }
-
-  /* Delete Button (Blue) */
-  .delete-btn {
     background-color: #004080;
     color: #fff;
     border: none;
@@ -479,15 +505,29 @@
     transition: background 0.3s ease;
   }
 
-  .delete-btn:hover {
+  .update-btn:hover {
     background-color: #003366;
   }
 
+  /* Delete Button (Blue) */
+  .delete-btn {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .delete-btn:hover {
+    background-color: #c0392b;
+  }
   .search-bar {
     width: 100%;
     max-width: 400px;
-    padding: 8px 12px;
     margin: 15px 0;
+    padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 0.95rem;
@@ -535,6 +575,7 @@
     max-width: 600px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     animation: modalSlideIn 0.3s ease;
+    overflow: hidden;
   }
 
   @keyframes modalSlideIn {
@@ -551,32 +592,44 @@
   .modal-header {
     background: #004080;
     color: white;
-    padding: 20px 30px;
+    padding: 20px;
     border-radius: 12px 12px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: relative;
+    text-align: center;
   }
 
   .modal-header h2 {
     margin: 0;
     font-size: 1.5rem;
+    padding: 0 40px;
+    line-height: 1.5;
   }
 
   .close-modal {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     color: white;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
     transition: color 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .close-modal:hover {
-    color: #ffcc00;
+    color: red;
   }
 
   .modal-form {
-    padding: 30px;
+    padding: 30px 50px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .form-group {
@@ -601,6 +654,7 @@
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
   }
 
   .form-group input:focus,
@@ -617,10 +671,10 @@
 
 
   .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
   }
 
   .form-row .form-group {
@@ -629,8 +683,8 @@
 
   .modal-footer {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: center;
+    gap: 20px;
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #eee;
@@ -640,12 +694,13 @@
     background: #ccc;
     color: #333;
     border: none;
-    padding: 12px 24px;
+    padding: 12px 32px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
     transition: background 0.3s ease;
+    min-width: 120px;
   }
 
   .cancel-btn:hover {
@@ -656,12 +711,13 @@
     background: #004080;
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 12px 32px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
     transition: background 0.3s ease;
+    min-width: 120px;
   }
 
   .submit-btn:hover {
@@ -672,32 +728,45 @@
   @media (max-width: 768px) {
     .modal-content {
       margin: 10% auto;
-      width: 95%;
+      width: 98%;
+      min-width: unset;
+      max-width: 99vw;
     }
 
     .modal-header {
-      padding: 15px 20px;
+      padding: 15px 12px;
     }
 
     .modal-header h2 {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
     }
 
     .modal-form {
-      padding: 20px;
+      padding: 12px;
     }
 
     .form-row {
       grid-template-columns: 1fr;
-      gap: 15px;
+      gap: 10px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      font-size: 0.98rem;
+      padding: 8px;
     }
 
     .modal-footer {
       flex-direction: column;
+      gap: 8px;
+      padding-top: 10px;
     }
 
     .cancel-btn,
     .submit-btn {
       width: 100%;
+      font-size: 1rem;
+      padding: 10px 0;
     }
   }

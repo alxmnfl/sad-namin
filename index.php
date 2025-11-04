@@ -23,7 +23,7 @@
           <span>Welcome, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></span>
           <a href="logout.php">Logout</a>
         <?php else: ?>
-    <a href="#" onclick="openModal('login-modal'); return false;">Log In</a> |
+    <a href="#" onclick="openModal('login-modal'); return false;">Sign In</a> |
     <a href="#" onclick="openModal('register-modal'); return false;">Sign Up</a>
         <?php endif; ?>
       </div>

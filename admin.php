@@ -224,7 +224,6 @@ function closeAddProductModal() {
         <button type="button" onclick="closeAddProductModal()" class="cancel-btn">Cancel</button>
         <button type="submit" name="add_product" class="submit-btn">Add Product</button>
       </div>
-      </div>
     </form>
   </div>
 </div>
