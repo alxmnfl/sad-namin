@@ -308,11 +308,6 @@ if ($transactions_result) {
                 <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
                 <button class="qty-btn" name="increase_qty">+</button>
               </form>
-
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
-                <button class="remove-btn" name="remove_from_cart">×</button>
-              </form>
             </div>
           </div>
         <?php endwhile; ?>
