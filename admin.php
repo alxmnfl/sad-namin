@@ -16,7 +16,6 @@ if ($conn->connect_error) {
 if (isset($_POST['add_product'])) {
     $name = $conn->real_escape_string($_POST['name']);
     $category = $conn->real_escape_string($_POST['category']); 
-    $desc = $conn->real_escape_string($_POST['description']);
     $price = floatval($_POST['price']);
     $stock = intval($_POST['stock']);
 
