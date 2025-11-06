@@ -8,7 +8,7 @@ if (!isset($_SESSION['username'])) {
 }
 
 // Pagination setup
-$records_per_page = 20;
+$records_per_page = 10;
 $current_page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($current_page - 1) * $records_per_page;
 

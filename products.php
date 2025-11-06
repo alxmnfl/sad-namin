@@ -350,11 +350,12 @@ if ($transactions_result) {
         </script>
 
       <?php else: ?>
-        <p>Your cart is empty.</p>
+        <p>Your cart is empty.</p>  
       <?php endif; ?>
     </div>
   </div>
 </div>
+
 
 <div id="historyPanel" class="history-container">
   <button class="close-btn" onclick="toggleHistory()">×</button>

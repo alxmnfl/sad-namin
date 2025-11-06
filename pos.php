@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Allow only staff and admin
-if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['staff', 'admin'])) {
+
+if (!isset($_SESSION['username']) ||  !in_array($_SESSION['role'], ['staff', 'admin'])) {
     header("Location: index.php");
     exit();
 }
@@ -12,7 +12,6 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Fetch products
 $products = $conn->query("SELECT * FROM products ORDER BY category, name");
 ?>
 <!DOCTYPE html>

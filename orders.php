@@ -10,14 +10,25 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-/* ---------------- UPDATE TRANSACTION STATUS ---------------- */
-if (isset($_POST['update_status'])) {
+/* ---------------- UPDATE TRANSACTION STATUS (AJAX) ---------------- */
+if (isset($_POST['ajax_update'])) {
     $transaction_id = intval($_POST['transaction_id']);
     $new_status = $conn->real_escape_string($_POST['status']);
     $conn->query("UPDATE transactions SET status='$new_status' WHERE transaction_id=$transaction_id");
+    echo json_encode(["success" => true]);
+    exit;
 }
 
-/* ---------------- FETCH TRANSACTIONS ---------------- */
+/* ---------------- FETCH TRANSACTIONS WITH PAGINATION ---------------- */
+$limit = 10;
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page < 1) $current_page = 1;
+$offset = ($current_page - 1) * $limit;
+
+$total_result = $conn->query("SELECT COUNT(*) AS total FROM transactions");
+$total_records = (int) $total_result->fetch_assoc()['total'];
+$total_pages = ($total_records > 0) ? ceil($total_records / $limit) : 1;
+
 $query = "
     SELECT 
         t.transaction_id,
@@ -33,6 +44,7 @@ $query = "
     FROM transactions t
     LEFT JOIN users u ON t.user_id = u.id
     ORDER BY t.transaction_date DESC
+    LIMIT $limit OFFSET $offset
 ";
 $transactions = $conn->query($query);
 ?>
@@ -69,6 +81,7 @@ $transactions = $conn->query($query);
                 <?php
                     $customer_name = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
                     if ($customer_name === '') $customer_name = 'Guest';
+                    $isSuccess = strtolower($row['status']) === 'success';
                 ?>
                 <tr>
                     <td><?= $row['transaction_id'] ?></td>
@@ -83,14 +96,12 @@ $transactions = $conn->query($query);
                         </span>
                     </td>
                     <td>
-                        <form method="POST" class="update-form">
-                            <input type="hidden" name="transaction_id" value="<?= $row['transaction_id'] ?>">
-                            <select name="status">
-                                <option value="Pending" <?= ($row['status'] ?? '')=='Pending'?'selected':'' ?>>Pending</option>
-                                <option value="Success" <?= ($row['status'] ?? '')=='Success'?'selected':'' ?>>Success</option>
-                            </select>
-                            <button type="submit" name="update_status" class="update-btn">Update</button>
-                        </form>
+                        <label class="switch">
+                            <input type="checkbox" class="status-toggle" 
+                                   data-id="<?= $row['transaction_id'] ?>"
+                                   <?= $isSuccess ? 'checked' : '' ?>>
+                            <span class="slider"></span>
+                        </label>
                     </td>
                 </tr>
             <?php endwhile; ?>
@@ -98,7 +109,52 @@ $transactions = $conn->query($query);
             <tr><td colspan="8">No transactions found.</td></tr>
         <?php endif; ?>
     </table>
+
+    <!-- Pagination -->
+    <?php if ($total_pages > 1): ?>
+    <div class="pagination">
+      <?php if ($current_page > 1): ?>
+        <a href="?page=<?= $current_page - 1 ?>" class="page-btn">← Previous</a>
+      <?php endif; ?>
+
+      <span class="page-info">
+        Page <?= $current_page ?> of <?= $total_pages ?> (Total: <?= $total_records ?> records)
+      </span>
+
+      <?php if ($current_page < $total_pages): ?>
+        <a href="?page=<?= $current_page + 1 ?>" class="page-btn">Next →</a>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
 </div>
+
+<script>
+document.querySelectorAll('.status-toggle').forEach(toggle => {
+    toggle.addEventListener('change', function() {
+        const transactionId = this.dataset.id;
+        const newStatus = this.checked ? 'Success' : 'Pending';
+        
+        fetch('', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                ajax_update: true,
+                transaction_id: transactionId,
+                status: newStatus
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const badge = this.closest('tr').querySelector('.status-badge');
+                badge.textContent = newStatus;
+                badge.className = 'status-badge ' + newStatus.toLowerCase();
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>
