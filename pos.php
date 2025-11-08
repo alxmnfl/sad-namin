@@ -12,7 +12,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$products = $conn->query("SELECT * FROM products ORDER BY category, name");
+$products = $conn->query("SELECT * FROM products_ko ORDER BY category, name");
 ?>
 <!DOCTYPE html>
 <html lang="en">
