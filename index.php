@@ -40,28 +40,57 @@
       <?php endif; ?>
     </header>
 
-    <!-- Categories Section -->
-    <section id="categories">
-      <h2 class="section-title">Categories</h2>
-      <div class="categories">
-        <div class="cat-card">
-          <img src="istockphoto-92775187-2048x2048.jpg" alt="Gravel">
-          <h3>Gravel</h3>
-        </div>
-        <div class="cat-card">
-          <img src="pexels-david-iloba-28486424-17268238.jpg" alt="Sand">
-          <h3>Sand</h3>
-        </div>
-        <div class="cat-card">
-          <img src="download.jpg" alt="Hollow Blocks">
-          <h3>Hollow Blocks</h3>
-        </div>
-        <div class="cat-card">
-          <img src="shopping.webp" alt="Cement">
-          <h3>Cement</h3>
-        </div>
+<!-- Categories Section -->
+<section id="categories">
+  <h2 class="section-title">Categories</h2>
+  <div class="categories">
+    <div class="cat-card">
+      <img src="istockphoto-92775187-2048x2048.jpg" alt="Gravel">
+      <h3>Gravel</h3>
+      <p class="info">Used for construction and road building</p>
+      <div class="hover-content">
+        <h3>Gravel</h3>
+        <p>High-quality construction gravel available in various sizes. Perfect for driveways, landscaping, and construction projects. Our gravel is carefully screened and washed.</p>
+        <button class="buy-now" onclick="checkLoginAndRedirect('products.php')">Buy Now</button>
       </div>
-    </section>
+    </div>
+
+    <div class="cat-card">
+      <img src="pexels-david-iloba-28486424-17268238.jpg" alt="Sand">
+      <h3>Sand</h3>
+      <p class="info">Fine aggregate for construction</p>
+      <div class="hover-content">
+        <h3>Sand</h3>
+        <p>Premium construction sand suitable for concrete mixing, plastering, and masonry work. Clean, well-graded, and meets industry standards.</p>
+        <button class="buy-now" onclick="checkLoginAndRedirect('products.php')">Buy Now</button>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <img src="download.jpg" alt="Hollow Blocks">
+      <h3>Hollow Blocks</h3>
+      <p class="info">Durable building blocks</p>
+      <div class="hover-content">
+        <h3>Hollow Blocks</h3>
+        <p>Strong and reliable hollow blocks perfect for walls and foundations. Available in different sizes and load-bearing capacities.</p>
+        <button class="buy-now" onclick="checkLoginAndRedirect('products.php')">Buy Now</button>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <img src="shopping.webp" alt="Cement">
+      <h3>Cement</h3>
+      <p class="info">Quality binding material</p>
+      <div class="hover-content">
+        <h3>Cement</h3>
+        <p>High-strength Portland cement suitable for all construction needs. Quick-setting and provides excellent durability for your projects.</p>
+        <button class="buy-now" onclick="checkLoginAndRedirect('products.php')">Buy Now</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 
     <!-- ABOUT -->
     <div id="about">
@@ -152,6 +181,15 @@
     </div>
 
     <script>
+      // Login check and redirect
+      function checkLoginAndRedirect(destination) {
+        <?php if (isset($_SESSION['username'])): ?>
+          window.location.href = destination;
+        <?php else: ?>
+          openModal('login-modal');
+        <?php endif; ?>
+      }
+      
       // Modal helpers
       function openModal(id) {
         var el = document.getElementById(id);

@@ -12,7 +12,17 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$products = $conn->query("SELECT * FROM products ORDER BY category, name");
+// fetch daw //
+$selected_category = isset($_GET['category']) ? $conn->real_escape_string($_GET['category']) : '';
+if (!empty($selected_category)) {
+    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 AND category = '$selected_category' ORDER BY id DESC");
+} else {
+    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
+}
+$categories = $conn->query("SELECT DISTINCT category FROM products_ko WHERE category IS NOT NULL AND category != ''");
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,31 +41,55 @@ $products = $conn->query("SELECT * FROM products ORDER BY category, name");
   </div>
 </nav>
 
+    <!-- ✅ Category Filter -->
+    <form method="GET" style="margin-bottom: 20px;">
+      <label for="category"><strong>Filter by Category:</strong></label>
+      <select name="category" id="category" onchange="this.form.submit()" style="padding: 8px; margin-left: 10px;">
+        <option value="">All</option>
+        <?php if ($categories && $categories->num_rows > 0): ?>
+          <?php while ($cat = $categories->fetch_assoc()): ?>
+            <option value="<?= htmlspecialchars($cat['category']) ?>" 
+              <?= ($selected_category === $cat['category']) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($cat['category']) ?>
+            </option>
+          <?php endwhile; ?>
+        <?php endif; ?>
+      </select>
+    </form>
 
-<div class="container">
-  <?php if ($products && $products->num_rows > 0): ?>
-    <?php while ($p = $products->fetch_assoc()): ?>
-      <div class="product-card" 
-           data-id="<?= $p['id'] ?>" 
-           data-name="<?= htmlspecialchars($p['name']) ?>" 
-           data-category="<?= htmlspecialchars($p['category']) ?>" 
-           data-price="<?= $p['price'] ?>">
-        <img src="<?= htmlspecialchars($p['image']) ?>" alt="Product Image">
-        <h4><?= htmlspecialchars($p['name']) ?></h4>
-        <p><?= htmlspecialchars($p['category']) ?></p>
-        <p><strong>₱<?= number_format($p['price'], 2) ?></strong></p>
-        <?php if ($p['stock'] > 0): ?>
+    <div class="product-grid">
+      <?php if ($products && $products->num_rows > 0): ?>
+        <?php while ($p = $products->fetch_assoc()): ?>
+          <div class="product-card">
+            <?php if (!empty($p['image'])): ?>
+              <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
+            <?php else: ?>
+              <div class="no-image">No Image</div>
+            <?php endif; ?>
+            <div class="product-footer">
+              <h4><?= htmlspecialchars($p['name']) ?></h4>
+              <?= htmlspecialchars($p['category']) ?>
+              <p><strong>₱<?= number_format($p['price'], 2) ?></strong></p>
+  
+  <form method="POST">
+  <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+
+  <?php if ($p['stock'] > 0): ?>
     <button type="submit" class="add-cart-btn" name="add_to_cart">Buy</button>
   <?php else: ?>
     <button type="button" class="add-cart-btn" disabled style="background-color: #999; cursor: not-allowed;">Out of Stock</button>
   <?php endif; ?>
 </form>
-      </div>
-    <?php endwhile; ?>
-  <?php else: ?>
-    <p style="padding: 20px;">No products available.</p>
-  <?php endif; ?>
-</div>
+
+            </div>
+          </div>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <p>No products available.</p>
+      <?php endif; ?>
+    </div>
+  </div>
+
 
 <div class="cart-container">
   <h3>🛒 Transaction</h3>

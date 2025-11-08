@@ -178,13 +178,13 @@ if (isset($_POST['checkout'])) {
 
 $selected_category = isset($_GET['category']) ? $conn->real_escape_string($_GET['category']) : '';
 if (!empty($selected_category)) {
-    $products = $conn->query("SELECT * FROM products WHERE category='$selected_category'");
+    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 AND category = '$selected_category' ORDER BY id DESC");
 } else {
-    $products = $conn->query("SELECT * FROM products");
+    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
 }
-$categories = $conn->query("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ''");
+$categories = $conn->query("SELECT DISTINCT category FROM products_ko WHERE category IS NOT NULL AND category != ''");
 
-$cart = $conn->query("SELECT c.cart_id, p.name, p.price, c.quantity FROM cart c JOIN products p ON c.product_id = p.id WHERE c.customer_id='$customer_id'");
+$cart = $conn->query("SELECT c.cart_id, p.name, p.price, c.quantity FROM cart c JOIN products_ko p ON c.product_id = p.id WHERE c.customer_id='$customer_id'");
 $transactions_result = $conn->query("
     SELECT t.transaction_id, t.transaction_date, t.total_amount, ti.product_name, ti.quantity, ti.price
     FROM transactions t
@@ -261,7 +261,8 @@ if ($transactions_result) {
               <h4><?= htmlspecialchars($p['name']) ?></h4>
               <?= htmlspecialchars($p['category']) ?>
               <p><strong>₱<?= number_format($p['price'], 2) ?></strong></p>
-              <form method="POST">
+  
+  <form method="POST">
   <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
 
   <?php if ($p['stock'] > 0): ?>

@@ -16,7 +16,6 @@ if ($conn->connect_error) {
 if (isset($_POST['add_product'])) {
     $name = $conn->real_escape_string($_POST['name']);
     $category = $conn->real_escape_string($_POST['category']); 
-    $desc = $conn->real_escape_string($_POST['description']);
     $price = floatval($_POST['price']);
     $stock = intval($_POST['stock']);
 
@@ -32,43 +31,36 @@ if (isset($_POST['add_product'])) {
         }
     }
 
-    $conn->query("INSERT INTO products (name, category, description, price, stock, image)
-                  VALUES ('$name','$category','$desc','$price','$stock','$image')");
+    $conn->query("INSERT INTO products_ko (name, category, price, stock, image)
+                  VALUES ('$name','$category','$price','$stock','$image')");
     
     header("Location: admin.php");
     exit();
 }
 
-/* ---------------- DELETE PRODUCT ---------------- */
-if (isset($_POST['delete_product'])) {
+/* ---------------- ARCHIVE PRODUCT ---------------- */
+if (isset($_POST['archive_product'])) {
     $pid = intval($_POST['product_id']);
-    $result = $conn->query("SELECT image FROM products WHERE id = $pid");
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $imagePath = $row['image'];
-        if (!empty($imagePath)) {
-            $fullPath = __DIR__ . '/' . $imagePath;
-            if (file_exists($fullPath)) unlink($fullPath);
-        }
-        $conn->query("DELETE FROM products WHERE id = $pid");
-    }
+    $conn->query("UPDATE products_ko SET archive = 1 WHERE id = $pid");
     
     header("Location: admin.php");
     exit();
 }
+
 
 /* ---------------- UPDATE STOCK ---------------- */
 if (isset($_POST['update_stock'])) {
     $pid = intval($_POST['product_id']);
     $new_stock = intval($_POST['new_stock']);
-    $conn->query("UPDATE products SET stock = stock + $new_stock WHERE id = $pid");
+    $conn->query("UPDATE products_ko SET stock = stock + $new_stock WHERE id = $pid");
     
     header("Location: admin.php");
     exit();
 }
 
 /* ---------------- FETCH PRODUCTS ---------------- */
-$products = $conn->query("SELECT * FROM products");
+$products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -153,8 +145,9 @@ function closeAddProductModal() {
 
               <form method="POST" style="display: inline;">
                 <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                <button type="submit" name="delete_product" class="delete-btn" onclick="return confirm('Delete this product?')">Delete</button>
+                <button type="submit" name="archive_product" class="archive-btn" onclick="return confirm('Archive this product?')">Archive</button>
               </form>
+
             </div>
           </td>
         </tr>
