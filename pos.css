@@ -255,6 +255,7 @@ nav .logo {
   display: none; /* hidden on desktop */
 }
 
+
 @media (max-width: 768px) {
   .floating-cart-btn {
     display: flex;
