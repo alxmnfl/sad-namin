@@ -491,23 +491,35 @@ nav .menu a.logout-btn:hover {
   }
 
   .update-btn:hover {
-    background-color: #003366;
+    background-color: #004080; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   }
 
-  /* Delete Button (Blue) */
-  .delete-btn {
-    background-color: #e74c3c;
-    color: #fff;
+
+ .archive-btn {
+    background-color: #e74c3c; /* Nice red */
+    color: white;
     border: none;
-    padding: 6px 12px;
+    padding: 6px 14px;
+    font-size: 14px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.3s ease;
-  }
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 
-  .delete-btn:hover {
-    background-color: #c0392b;
-  }
+.archive-btn:hover {
+    background-color: #c0392b; /* Darker red on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.archive-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
   /* Align Add Product button beside Search bar */
 .manage-products-header {
   display: flex;
@@ -555,6 +567,8 @@ nav .menu a.logout-btn:hover {
 
   .add-product-btn:hover {
     background: #003366;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   }
 
   /* Modal Styles */
