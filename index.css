@@ -101,6 +101,23 @@ header button:hover {
   transform: scale(1.05);
 }
 
+/* Shop Now pulsing animation */
+@keyframes shopPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.shop-now {
+  animation: shopPulse 2000ms ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .shop-now { animation: none; }
+}
+
 /* ==============================
    CATEGORIES
 ============================== */
@@ -114,29 +131,51 @@ header button:hover {
 .categories {
   display: flex;
   justify-content: center;
-  gap: 25px;
-  padding: 20px;
+  gap: 32px;
+  padding: 26px 16px;
   flex-wrap: wrap;
 }
 
 .cat-card {
   background: #f9f9f9;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  border: 1px solid rgba(0,0,0,0.05);
   text-align: center;
-  width: 220px;
-  transition: 0.3s ease;
+  width: 320px; /* increased card width */
+  transition: 0.28s ease;
   cursor: pointer;
+  text-decoration: none;
+  display: block;
+  color: inherit;
 }
 
 .cat-card img {
   width: 100%;
-  height: 150px;
+  height: 220px; /* larger image height */
   object-fit: cover;
   border-radius: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+
+/* More link below categories */
+.categories-footer {
+  text-align: center;
+  margin-top: 14px;
+}
+.more-link {
+  display: inline-block;
+  padding: 14px 26px; /* increased for a more prominent look */
+  background: #004080;
+  color: #fff;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.125rem; /* larger text for better readability */
+  transition: background 0.16s ease, transform 0.12s ease;
+}
+.more-link:hover { background: #0059b3; transform: translateY(-5px); }
 
 .cat-card h3 {
   color: #004080;
@@ -157,19 +196,59 @@ header button:hover {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  background: #f5f7fa;
+  background: transparent;
   padding: 80px 20px;
   gap: 40px;
-  border-radius: 20px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: none;
   max-width: 1200px;
   margin: 60px auto;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Decorative back panel that extends slightly beyond the about container */
+#about {
+  position: relative;
+  overflow: visible;
+}
+
+/* use a centered panel sized to the site's main content area so the extended
+   edges line up with the category area; use a little extra so it visually
+   extends to the end of the category cards */
+:root {
+  --site-max-width: 1200px;
+  --panel-extra: 180px; /* further increased to stretch left/right borders more */
+}
+
+#about::before {
+  content: '';
+  position: absolute;
+  left: var(--panel-left, 50%);
+  top: 20px;
+  bottom: 20px;
+  width: var(--panel-width, calc(var(--site-max-width) + var(--panel-extra)));
+  transform: translateX(var(--panel-translate, -50%));
+  background: #f5f7fa;
+  /* Make the about back-panel border/shadow match the contact block for a more unified look */
+  border-radius: 20px; /* match #contact */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0,0,0,0.06);
+  z-index: -1;
+}
+
+/* Decorative back panel for Contact aligned with site content width */
+#contact {
+  position: relative;
+  overflow: visible;
+  /* restore original subtle box-shadow so only this element has the hover border */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Category cards now have a clearer border and shadow to stand out individually */
+
 #about:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 64, 128, 0.2);
+  transform: none;
+  box-shadow: none;
 }
 
 #about .about-img {
@@ -201,6 +280,51 @@ header button:hover {
   line-height: 1.7;
   font-size: 1rem;
   color: #555;
+}
+
+/* Scroll reveal for about section */
+#about.about-hidden {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 520ms cubic-bezier(.2,.9,.2,1), transform 520ms cubic-bezier(.2,.9,.2,1);
+}
+
+#about.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#about .about-text.in-view p {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#about .about-text p {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 480ms ease, transform 480ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #about, #about .about-text p { transition: none !important; transform: none !important; }
+}
+
+/* Typing caret for the about paragraph while typing */
+.about-text p.typing::after {
+  content: "|";
+  display: inline-block;
+  margin-left: 6px;
+  opacity: 0.9;
+  animation: blinkCaret 900ms steps(1,end) infinite;
+}
+
+@keyframes blinkCaret {
+  from, to { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-text p.typing::after { display: none; animation: none; }
 }
 
 /* ==============================
@@ -428,6 +552,35 @@ p .pmodal a {
   .contact-info {
     width: 100%;
   }
+
+  /* Make category cards stack and be full-width on narrower screens */
+  .categories {
+    gap: 18px;
+    padding: 18px;
+  }
+  .cat-card {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .cat-card img { height: 160px; width: 40%; border-radius: 10px; }
+  .cat-card h3 { font-size: 1.2rem; }
+}
+
+/* Reduce the panel width on smaller screens so it doesn't overflow */
+@media (max-width: 1200px) {
+  :root { --site-max-width: 1000px; }
+}
+
+@media (max-width: 900px) {
+  :root { --site-max-width: 720px; --panel-extra: 32px; }
+}
+
+@media (max-width: 600px) {
+  :root { --site-max-width: 360px; --panel-extra: 16px; }
 }
 
 /* Strong override to ensure eye toggle is small and circular inside inputs (cache-bust safety) */

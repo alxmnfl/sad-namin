@@ -216,6 +216,11 @@ function closeAddProductModal() {
       </div>
 
       <div class="form-group">
+        <label for="modal-description">Description</label>
+        <textarea id="modal-description" name="description" placeholder="Product description (visible in product details)" rows="4" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;"></textarea>
+      </div>
+
+      <div class="form-group">
         <label for="modal-image">Product Image</label>
         <input type="file" id="modal-image" name="image" accept="image/*">
       </div>

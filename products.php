@@ -1,18 +1,9 @@
 <?php
 session_start();
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// Initialize customer_id for guests
+$customer_id = isset($_SESSION['id']) ? $_SESSION['id'] : 0;
 
-require 'vendor/autoload.php'; // ✅ Include PHPMailer
-
-// Redirect if not logged in
-if (!isset($_SESSION['username']) || $_SESSION['role'] != 'customer') {
-    header("Location: index.php");
-    exit();
-}
-
-$customer_id = $_SESSION['id'];
 $conn = new mysqli("localhost", "root", "", "hardware_db");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -30,11 +21,36 @@ if ($user_query && $user_query->num_rows > 0) {
 /* ---------------- ADD TO CART ---------------- */
 if (isset($_POST['add_to_cart'])) {
     $product_id = $_POST['product_id'];
-    $check = $conn->query("SELECT * FROM cart WHERE customer_id='$customer_id' AND product_id='$product_id'");
-    if ($check->num_rows > 0) {
-        $conn->query("UPDATE cart SET quantity = quantity + 1 WHERE customer_id='$customer_id' AND product_id='$product_id'");
+    
+    // If user is not logged in, store cart in session
+    if (!isset($_SESSION['username'])) {
+        if (!isset($_SESSION['temp_cart'])) {
+            $_SESSION['temp_cart'] = array();
+        }
+        
+        $product_exists = false;
+        foreach ($_SESSION['temp_cart'] as &$item) {
+            if ($item['product_id'] == $product_id) {
+                $item['quantity']++;
+                $product_exists = true;
+                break;
+            }
+        }
+        
+        if (!$product_exists) {
+            $_SESSION['temp_cart'][] = array(
+                'product_id' => $product_id,
+                'quantity' => 1
+            );
+        }
     } else {
-        $conn->query("INSERT INTO cart (customer_id, product_id, quantity) VALUES ('$customer_id','$product_id','1')");
+        // If user is logged in, store cart in database
+        $check = $conn->query("SELECT * FROM cart WHERE customer_id='$customer_id' AND product_id='$product_id'");
+        if ($check->num_rows > 0) {
+            $conn->query("UPDATE cart SET quantity = quantity + 1 WHERE customer_id='$customer_id' AND product_id='$product_id'");
+        } else {
+            $conn->query("INSERT INTO cart (customer_id, product_id, quantity) VALUES ('$customer_id','$product_id','1')");
+        }
     }
 }
 
@@ -63,6 +79,27 @@ if (isset($_POST['remove_from_cart'])) {
 
 /* ---------------- CHECKOUT ---------------- */
 if (isset($_POST['checkout'])) {
+    // Ensure user is logged in before checkout
+    if (!isset($_SESSION['username'])) {
+        header("Location: index.php#login-modal");
+        exit();
+    }
+    
+    // If there was a temporary cart, transfer it to the user's actual cart
+    if (isset($_SESSION['temp_cart']) && !empty($_SESSION['temp_cart'])) {
+        foreach ($_SESSION['temp_cart'] as $item) {
+            $pid = $item['product_id'];
+            $qty = $item['quantity'];
+            $check = $conn->query("SELECT * FROM cart WHERE customer_id='$customer_id' AND product_id='$pid'");
+            if ($check->num_rows > 0) {
+                $conn->query("UPDATE cart SET quantity = quantity + $qty WHERE customer_id='$customer_id' AND product_id='$pid'");
+            } else {
+                $conn->query("INSERT INTO cart (customer_id, product_id, quantity) VALUES ('$customer_id','$pid','$qty')");
+            }
+        }
+        // Clear the temporary cart
+        unset($_SESSION['temp_cart']);
+    }
 
     $order_type = $_POST['order_type'] ?? '';
     $delivery_address = $_POST['delivery_address'] ?? '';
@@ -77,12 +114,10 @@ if (isset($_POST['checkout'])) {
 
     if ($cart_items->num_rows > 0) {
         $total = 0;
-
         while ($i = $cart_items->fetch_assoc()) {
             $total += $i['quantity'] * $i['price'];
         }
 
-        // ✅ Include order_type, address, and contact
         $conn->query("INSERT INTO transactions (user_id, total_amount, transaction_date, order_type, delivery_address, contact_number) 
                       VALUES ('$customer_id','$total',NOW(),'$order_type','$delivery_address','$contact_number')");
         $transaction_id = $conn->insert_id;
@@ -151,31 +186,20 @@ if (isset($_POST['checkout'])) {
           </div>
         </div>";
 
+        // Email functionality temporarily disabled
+        // Will be implemented when PHPMailer is properly installed
         if (!empty($user_email)) {
-            $mail = new PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'rogeliomonfielsr@gmail.com';
-                $mail->Password = 'kioa rdpq tews rcdx';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = 587;
-                $mail->setFrom('rogeliomonfielsr@gmail.com', 'Abeth Hardware');
-                $mail->addAddress($user_email, $user_name);
-                $mail->isHTML(true);
-                $mail->Subject = 'Your Receipt from Abeth Hardware';
-                $mail->Body = $receipt_body;
-                $mail->send();
-            } catch (Exception $e) {
-                error_log("Mailer Error: " . $mail->ErrorInfo);
+            // Store the receipt in a file for now
+            $receipt_file = 'receipts/' . $transaction_id . '_receipt.html';
+            if (!is_dir('receipts')) {
+                mkdir('receipts');
             }
+            file_put_contents($receipt_file, $receipt_body);
         }
     }
 }
 
 /* ---------------- FETCH DATA ---------------- */
-
 $selected_category = isset($_GET['category']) ? $conn->real_escape_string($_GET['category']) : '';
 if (!empty($selected_category)) {
     $products = $conn->query("SELECT * FROM products WHERE category='$selected_category'");
@@ -214,25 +238,97 @@ if ($transactions_result) {
 <title>Abeth Hardware - Customer</title>
 <link rel="stylesheet" href="products.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+    function showProductDetail(id, name, price, description, stock) {
+      const detailPanel = document.getElementById('product-detail-panel');
+      const detailContent = document.getElementById('detail-content');
+      const productCard = document.querySelector(`[data-product-id="${id}"]`);
+      const productImage = productCard.querySelector('.product-image');
+      
+      detailContent.innerHTML = `
+        <div class="detail-image-section">
+          <div class="product-image">
+            ${productImage.innerHTML}
+          </div>
+        </div>
+        <div class="detail-info-section">
+          <div class="detail-header">
+            <h3>${name}</h3>
+            <p class="price">₱${price}</p>
+          </div>
+          <div class="detail-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Category:</span>
+                <span class="value">${productCard.getAttribute('data-category')}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Stock:</span>
+                <span class="value ${stock > 0 ? 'in-stock' : 'out-of-stock'}">
+                  ${stock > 0 ? `${stock} units available` : 'Out of Stock'}
+                </span>
+              </div>
+            </div>
+            <div class="description-section">
+              <h4>Description</h4>
+              <p>${description || 'No description available.'}</p>
+            </div>
+          </div>
+          <div class="detail-footer">
+            <form method="post" class="detail-cart-form">
+              <input type="hidden" name="product_id" value="${id}">
+              <div class="quantity-control">
+                <label for="qty-${id}">Quantity:</label>
+                <input type="number" id="qty-${id}" name="quantity" value="1" min="1" max="${stock}" ${stock <= 0 ? 'disabled' : ''}>
+              </div>
+              <button type="submit" name="add_to_cart" class="detail-add-cart-btn" ${stock <= 0 ? 'disabled' : ''}>
+                ${stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      document.body.classList.add('detail-panel-open');
+      detailPanel.style.display = 'block';
+    }
+
+    function closeProductDetail() {
+      document.getElementById('product-detail-panel').style.display = 'none';
+    }
+</script>
 </head>
 <body>
 
-<div class="header">
-  <h3>WELCOME TO ABETH HARDWARE!</h3>
+<nav class="header">
+  <div class="logo"><a href="index.php" class="logo-link"><strong>Abeth Hardware</strong></a></div>
   <div class="top-right">
     <button class="home-btn" onclick="window.location.href='index.php'">Home</button>
-    <button class="history-btn" onclick="toggleHistory()">History</button>
-    <form action="logout.php" method="POST">
-      <button type="submit" class="logout-btn">Logout</button>
-    </form>
+    <?php if (isset($_SESSION['username'])): ?>
+      <button class="history-btn" onclick="toggleHistory()">History</button>
+      <form action="logout.php" method="POST" style="display: inline;">
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    <?php else: ?>
+      <!-- guest: no extra button (single Home already present) -->
+    <?php endif; ?>
   </div>
-</div>
+</nav>
 
 <div class="layout">
-  <div class="left-panel">
+  <div class="left-panel detail-panel" id="product-detail-panel" style="display: none;">
+    <div class="panel-header">
+      <h2>Product Details</h2>
+      <button class="close-detail-btn" onclick="closeProductDetail()">&times;</button>
+    </div>
+    <div class="product-detail-grid" id="detail-content">
+    </div>
+  </div>
+
+  <div class="middle-panel">
     <h2>Available Products</h2>
 
-    <!-- ✅ Category Filter -->
+    <!-- Category Filter -->
     <form method="GET" style="margin-bottom: 20px;">
       <label for="category"><strong>Filter by Category:</strong></label>
       <select name="category" id="category" onchange="this.form.submit()" style="padding: 8px; margin-left: 10px;">
@@ -251,26 +347,39 @@ if ($transactions_result) {
     <div class="product-grid">
       <?php if ($products && $products->num_rows > 0): ?>
         <?php while ($p = $products->fetch_assoc()): ?>
-          <div class="product-card">
-            <?php if (!empty($p['image'])): ?>
-              <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
-            <?php else: ?>
-              <div class="no-image">No Image</div>
-            <?php endif; ?>
-            <div class="product-footer">
+          <div class="product-card" data-product-id="<?= $p['id'] ?>" data-category="<?= htmlspecialchars($p['category']) ?>">
+            <div class="product-image">
+              <?php if (!empty($p['image'])): ?>
+                <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
+              <?php else: ?>
+                <div class="no-image">No Image</div>
+              <?php endif; ?>
+            </div>
+            <div class="product-footer" onclick="showProductDetail(
+                '<?= $p['id'] ?>', 
+                '<?= htmlspecialchars(addslashes($p['name'])) ?>', 
+                '<?= number_format($p['price'], 2) ?>', 
+                '<?= htmlspecialchars(addslashes($p['description'] ?? '')) ?>', 
+                '<?= $p['stock'] ?>'
+              )">
               <h4><?= htmlspecialchars($p['name']) ?></h4>
               <?= htmlspecialchars($p['category']) ?>
               <p><strong>₱<?= number_format($p['price'], 2) ?></strong></p>
-              <form method="POST">
-  <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-
-  <?php if ($p['stock'] > 0): ?>
-    <button type="submit" class="add-cart-btn" name="add_to_cart">Buy</button>
-  <?php else: ?>
-    <button type="button" class="add-cart-btn" disabled style="background-color: #999; cursor: not-allowed;">Out of Stock</button>
-  <?php endif; ?>
-</form>
-
+              <p class="stock-info" style="color: <?= $p['stock'] > 0 ? '#007700' : '#cc0000' ?>; margin: 5px 0;">
+                <?php if ($p['stock'] > 0): ?>
+                  In Stock: <?= $p['stock'] ?> units
+                <?php else: ?>
+                  Out of Stock
+                <?php endif; ?>
+              </p>
+              <form method="POST" onclick="event.stopPropagation()">
+                <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                <?php if ($p['stock'] > 0): ?>
+                  <button type="submit" class="add-cart-btn" name="add_to_cart">Add to Cart</button>
+                <?php else: ?>
+                  <button type="button" class="add-cart-btn" disabled style="background-color: #999; cursor: not-allowed;">Out of Stock</button>
+                <?php endif; ?>
+              </form>
             </div>
           </div>
         <?php endwhile; ?>
@@ -283,75 +392,111 @@ if ($transactions_result) {
   <div class="right-panel">
     <div class="cart-header">Your Cart</div>
     <div class="cart-content">
-      <?php if ($cart && $cart->num_rows > 0): ?>
-        <?php 
-        $total = 0;
-        while ($item = $cart->fetch_assoc()): 
-            $subtotal = $item['price'] * $item['quantity'];
-            $total += $subtotal;
-        ?>
-          <div class="cart-row">
-            <div>
-              <strong><?= htmlspecialchars($item['name']) ?></strong><br>
-              ₱<?= number_format($item['price'], 2) ?>
-            </div>
+      <?php
+      $total = 0;
+      if (!isset($_SESSION['username'])) {
+          // Display temporary cart for non-logged-in users
+          if (isset($_SESSION['temp_cart']) && !empty($_SESSION['temp_cart'])) {
+              foreach ($_SESSION['temp_cart'] as $cart_item) {
+                  $pid = $cart_item['product_id'];
+                  $result = $conn->query("SELECT name, price FROM products WHERE id = $pid");
+                  if ($result && $row = $result->fetch_assoc()) {
+                      $subtotal = $row['price'] * $cart_item['quantity'];
+                      $total += $subtotal;
+                      ?>
+                      <div class="cart-row">
+                          <div>
+                              <strong><?= htmlspecialchars($row['name']) ?></strong><br>
+                              ₱<?= number_format($row['price'], 2) ?>
+                          </div>
+                          <div class="cart-controls">
+                              <span><?= $cart_item['quantity'] ?></span>
+                          </div>
+                      </div>
+                      <?php
+                  }
+              }
+              ?>
+              <div class="total-section">
+                  <p><strong>Total: ₱<?= number_format($total, 2) ?></strong></p>
+                  <button onclick="window.location.href='index.php#login-modal'" class="checkout-btn">Login to Checkout</button>
+              </div>
+              <?php
+          } else {
+              echo "<p>Your cart is empty.</p>";
+          }
+      } else {
+          // Display cart for logged-in users
+          if ($cart && $cart->num_rows > 0) {
+              while ($item = $cart->fetch_assoc()) {
+                  $subtotal = $item['price'] * $item['quantity'];
+                  $total += $subtotal;
+                  ?>
+                  <div class="cart-row">
+                      <div>
+                          <strong><?= htmlspecialchars($item['name']) ?></strong><br>
+                          ₱<?= number_format($item['price'], 2) ?>
+                      </div>
 
-            <div class="cart-controls">
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
-                <button class="qty-btn" name="decrease_qty">-</button>
+                      <div class="cart-controls">
+                          <form method="POST" style="display:inline;">
+                              <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
+                              <button class="qty-btn" name="decrease_qty">-</button>
+                          </form>
+
+                          <span><?= $item['quantity'] ?></span>
+
+                          <form method="POST" style="display:inline;">
+                              <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
+                              <button class="qty-btn" name="increase_qty">+</button>
+                          </form>
+
+                          <form method="POST" style="display:inline;">
+                              <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
+                              <button class="remove-btn" name="remove_from_cart">×</button>
+                          </form>
+                      </div>
+                  </div>
+                  <?php
+              }
+              ?>
+              <div class="total-section">
+                  <p><strong>Subtotal:</strong> ₱<?= number_format($total, 2) ?></p>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                      <label for="cashInput"><strong>Cash:</strong></label>
+                      <input type="number" id="cashInput" placeholder="Enter cash amount" step="0.01" min="0">
+                  </div>
+                  <p><strong>Change:</strong> ₱<span id="changeDisplay">0.00</span></p>
+              </div>
+
+              <form method="POST" id="checkoutForm">
+                  <label><strong>Order Type:</strong></label>
+                  <select name="order_type" id="orderType" required style="width: 100%; padding: 8px; margin: 10px 0;">
+                      <option value="" disabled selected>-- Choose --</option>
+                      <option value="pickup">Pickup</option>
+                      <option value="delivery">Delivery</option>
+                  </select>
+
+                  <div id="deliveryFields" style="display: none;">
+                      <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                      <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                  </div>
+
+                  <button type="submit" class="add-cart-btn" name="checkout" style="width: 100%;">Checkout</button>
               </form>
 
-              <span><?= $item['quantity'] ?></span>
-
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
-                <button class="qty-btn" name="increase_qty">+</button>
-              </form>
-
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
-                <button class="remove-btn" name="remove_from_cart">×</button>
-              </form>
-            </div>
-          </div>
-        <?php endwhile; ?>
-
-        <div class="total-section">
-          <p><strong>Subtotal:</strong> ₱<?= number_format($total, 2) ?></p>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <label for="cashInput"><strong>Cash:</strong></label>
-            <input type="number" id="cashInput" placeholder="Enter cash amount" step="0.01" min="0">
-          </div>
-          <p><strong>Change:</strong> ₱<span id="changeDisplay">0.00</span></p>
-        </div>
-
-        <form method="POST" id="checkoutForm">
-          <label><strong>Order Type:</strong></label>
-          <select name="order_type" id="orderType" required style="width: 100%; padding: 8px; margin: 10px 0;">
-            <option value="" disabled selected>-- Choose --</option>
-            <option value="pickup">Pickup</option>
-            <option value="delivery">Delivery</option>
-          </select>
-
-          <div id="deliveryFields" style="display: none;">
-            <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-            <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-          </div>
-
-          <button type="submit" class="add-cart-btn" name="checkout" style="width: 100%;">Checkout</button>
-        </form>
-
-        <script>
-        document.getElementById('orderType').addEventListener('change', function() {
-          const deliveryFields = document.getElementById('deliveryFields');
-          deliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
-        });
-        </script>
-
-      <?php else: ?>
-        <p>Your cart is empty.</p>
-      <?php endif; ?>
+              <script>
+              document.getElementById('orderType').addEventListener('change', function() {
+                  const deliveryFields = document.getElementById('deliveryFields');
+                  deliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
+              });
+              </script>
+              <?php
+          } else {
+              echo "<p>Your cart is empty.</p>";
+          }
+      }
+      ?>
     </div>
   </div>
 </div>

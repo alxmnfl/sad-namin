@@ -34,9 +34,9 @@
       <p>Gravel, Sand, Hollow Blocks, Cement, and More</p>
 
       <?php if (isset($_SESSION['username'])): ?>
-        <button onclick="window.location.href='products.php'">Shop Now!</button>
+        <button class="shop-now" onclick="window.location.href='products.php'">Shop Now!</button>
       <?php else: ?>
-        <button onclick="openModal('login-modal')">Shop Now!</button>
+        <button class="shop-now" onclick="openModal('login-modal')">Shop Now!</button>
       <?php endif; ?>
     </header>
 
@@ -44,22 +44,25 @@
     <section id="categories">
       <h2 class="section-title">Categories</h2>
       <div class="categories">
-        <div class="cat-card">
+        <a href="products.php?category=Gravel" class="cat-card">
           <img src="istockphoto-92775187-2048x2048.jpg" alt="Gravel">
           <h3>Gravel</h3>
-        </div>
-        <div class="cat-card">
+        </a>
+        <a href="products.php?category=Sand" class="cat-card">
           <img src="pexels-david-iloba-28486424-17268238.jpg" alt="Sand">
           <h3>Sand</h3>
-        </div>
-        <div class="cat-card">
+        </a>
+        <a href="products.php?category=Hollow Blocks" class="cat-card">
           <img src="download.jpg" alt="Hollow Blocks">
           <h3>Hollow Blocks</h3>
-        </div>
-        <div class="cat-card">
+        </a>
+        <a href="products.php?category=Cement" class="cat-card">
           <img src="shopping.webp" alt="Cement">
           <h3>Cement</h3>
-        </div>
+        </a>
+      </div>
+      <div class="categories-footer">
+        <a href="products.php" class="more-link">More</a>
       </div>
     </section>
 
@@ -234,6 +237,163 @@
           });
         }
       });
+
+      // Shop Now and About scroll animations
+    document.addEventListener('DOMContentLoaded', function() {
+      // If user prefers reduced motion, do not run animations
+      var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) {
+        document.querySelectorAll('.shop-now').forEach(function(b){ b.style.animation = 'none'; });
+      }
+
+      // About scroll reveal using IntersectionObserver and typing animation (replays on re-entry)
+      try {
+        var about = document.getElementById('about');
+        if (about) {
+          // start hidden
+          about.classList.add('about-hidden');
+
+          var p = about.querySelector('.about-text p');
+          if (p) {
+            p.setAttribute('data-original-text', p.textContent.trim());
+            if (!prefersReduced) p.textContent = '';
+          }
+
+          var isTyping = false;
+          var typingInterval = null;
+
+          var io = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              var target = entry.target;
+              var textContainer = target.querySelector('.about-text');
+              var para = textContainer ? textContainer.querySelector('p') : null;
+
+              if (entry.isIntersecting) {
+                // reveal container
+                target.classList.add('in-view');
+                if (textContainer) setTimeout(function(){ textContainer.classList.add('in-view'); }, 80);
+
+                if (!para) return;
+                // if reduced motion, show immediately
+                if (prefersReduced) {
+                  if (!para.getAttribute('data-typed')) {
+                    para.textContent = para.getAttribute('data-original-text') || para.textContent;
+                    para.setAttribute('data-typed','1');
+                  }
+                  return;
+                }
+
+                // start typing only if not already typed or typing
+                if (!para.getAttribute('data-typed') && !isTyping) {
+                  isTyping = true;
+                  para.classList.add('typing');
+                  var original = para.getAttribute('data-original-text') || '';
+                  var i = 0;
+                  var speed = 8; // faster ms per character (reduced for snappier typing)
+
+                  var revealImmediately = function() {
+                    if (typingInterval) clearInterval(typingInterval);
+                    para.textContent = original;
+                    para.classList.remove('typing');
+                    para.setAttribute('data-typed','1');
+                    isTyping = false;
+                    para.removeEventListener('click', revealImmediately);
+                  };
+
+                  para.addEventListener('click', revealImmediately);
+                  typingInterval = setInterval(function() {
+                    i++;
+                    para.textContent = original.slice(0, i);
+                    if (i >= original.length) {
+                      clearInterval(typingInterval);
+                      para.classList.remove('typing');
+                      para.setAttribute('data-typed','1');
+                      isTyping = false;
+                      para.removeEventListener('click', revealImmediately);
+                    }
+                  }, speed);
+                }
+              } else {
+                // left the viewport — reset so typing can replay next time
+                if (prefersReduced) return;
+                if (!textContainer) return;
+                if (isTyping) {
+                  clearInterval(typingInterval);
+                  isTyping = false;
+                }
+                if (para) {
+                  para.textContent = '';
+                  para.classList.remove('typing');
+                  para.removeAttribute('data-typed');
+                }
+                target.classList.remove('in-view');
+                textContainer.classList.remove('in-view');
+              }
+            });
+          }, { threshold: 0.35 });
+
+          io.observe(about);
+        }
+      } catch (e) {
+        // IntersectionObserver not supported — fallback: reveal immediately
+        var about = document.getElementById('about');
+        if (about) {
+          about.classList.add('in-view');
+          var p = about.querySelector('.about-text p');
+          if (p) p.textContent = p.getAttribute('data-original-text') || p.textContent;
+        }
+      }
+
+      // Align about/contact decorative panels with the first and last visible category card
+      (function alignPanels(){
+        var cats = document.querySelectorAll('.cat-card');
+        var aboutEl = document.getElementById('about');
+        var contactEl = document.getElementById('contact');
+        if (!aboutEl) return;
+
+        function update() {
+          var aboutRect = aboutEl.getBoundingClientRect();
+
+          // Prefer aligning to the contact block if it exists (keeps both borders visually matched)
+          if (contactEl) {
+            var contactRect = contactEl.getBoundingClientRect();
+            var aboutLeft = Math.max(0, contactRect.left - aboutRect.left);
+            var aboutWidth = Math.max(0, contactRect.width);
+
+            aboutEl.style.setProperty('--panel-left', aboutLeft + 'px');
+            aboutEl.style.setProperty('--panel-width', aboutWidth + 'px');
+            aboutEl.style.setProperty('--panel-translate', '0');
+            return;
+          }
+
+          // Fallback: align to category area if contact not present
+          if (!cats || cats.length === 0) return;
+          var minLeft = Infinity, maxRight = -Infinity;
+          cats.forEach(function(c){
+            var r = c.getBoundingClientRect();
+            if (r.width === 0) return; // hidden
+            minLeft = Math.min(minLeft, r.left);
+            maxRight = Math.max(maxRight, r.right);
+          });
+          if (!isFinite(minLeft)) return;
+
+          var aboutLeft2 = Math.max(0, minLeft - aboutRect.left);
+          var aboutWidth2 = Math.max(0, maxRight - minLeft);
+          aboutEl.style.setProperty('--panel-left', aboutLeft2 + 'px');
+          aboutEl.style.setProperty('--panel-width', aboutWidth2 + 'px');
+          aboutEl.style.setProperty('--panel-translate', '0');
+        }
+
+        // run initially and on resize/scroll (debounced)
+        var t;
+        function schedule(){ clearTimeout(t); t=setTimeout(update, 60); }
+        update();
+        window.addEventListener('resize', schedule);
+        window.addEventListener('orientationchange', schedule);
+        // some layouts change on images load
+        window.addEventListener('load', schedule);
+      })();
+    });
     </script>
 
   </body>
