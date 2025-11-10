@@ -501,6 +501,7 @@ if ($transactions_result) {
   </div>
 </div>
 
+
 <div id="historyPanel" class="history-container">
   <button class="close-btn" onclick="toggleHistory()">×</button>
   <h3>Purchase History</h3>

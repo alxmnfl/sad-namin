@@ -111,14 +111,13 @@ function closeAddProductModal() {
 <!-- PRODUCT MANAGEMENT -->
 <div class="admin-panel" id="products">
 
-  <!-- Add Product Button (moved above heading for visibility) -->
-  <button onclick="openAddProductModal()" class="add-product-btn" style="margin-bottom: 18px;">+ Add Product</button>
 
   <h3 style="margin-top:0;">Manage Products</h3>
 
-  <!-- 🔍 SEARCH BAR -->
-  <input type="text" id="searchInput" placeholder="Search by name, category, price..." class="search-bar">
-
+  <div class="manage-products-header">
+    <input type="text" id="searchInput" placeholder="Search by name, category, price..." class="search-bar">
+    <button onclick="openAddProductModal()" class="add-product-btn">+ Add Product</button>
+  </div>
   <table class="product-table" id="productTable">
     <tr>
       <th>ID</th>

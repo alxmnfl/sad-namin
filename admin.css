@@ -508,6 +508,26 @@ nav .menu a.logout-btn:hover {
   .delete-btn:hover {
     background-color: #c0392b;
   }
+  /* Align Add Product button beside Search bar */
+.manage-products-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.manage-products-header .search-bar {
+  flex: 1;
+  max-width: 400px;
+  margin: 0;
+}
+
+.manage-products-header .add-product-btn {
+  margin: 0;
+  padding: 10px 20px;
+}
+
   .search-bar {
     width: 100%;
     max-width: 400px;

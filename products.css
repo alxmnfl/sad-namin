@@ -188,18 +188,18 @@
     }
 
     .right-panel {
-      flex: 0 0 350px;
-      align-self: flex-start;
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 100%;
-      overflow-x: hidden !important;
       position: sticky;
       top: 20px;
-    }
+      align-self: flex-start;
+      width: 340px;
+      background: #fff;
+       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      overflow-y: auto;
+      max-height: calc(100vh - 40px);
+}
+
 
     /* Detail Panel Styles */
     .panel-header {
@@ -624,26 +624,6 @@
       transform: scale(1.05);
     }
 
-    .remove-btn {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      width: 32px;
-      height: 32px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .remove-btn:hover {
-      background-color: #c82333;
-      transform: scale(1.05);
-    }
-
     .checkout-btn {
       width: 100%;
       background: linear-gradient(45deg, #004080, #005cb3);
@@ -664,22 +644,6 @@
       background: linear-gradient(45deg, #003366, #004080);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,64,128,0.2);
-    }
-
-    .checkout-btn {
-      width: 100%;
-      background: #004080;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    .checkout-btn:hover {
-      background: #0059b3;
     }
 
     /* ✅ NEW: Total & Cash Section */
