@@ -91,13 +91,32 @@ function toggleHomeMenu() {
     </div>
 
     <!-- CONTACT -->
-    <div id="contact">
-      <div class="contact-info">
+
+
+    <div id="contact" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; margin-bottom: 24px;">
+      <div class="contact-info" style="flex: 1 1 220px; min-width: 200px;">
         <h2>Contact Us</h2>
         <p><b>Address:</b> B3/L11 Tiongquaio St. Manuyo Dos, Las Pinas City.</p>
         <p><b>Phone:</b> +63 966-866-9728 / +63 977-386-8066</p>
         <p><b>Email:</b> abethhardware@gmail.com</p>
         <p><b>Business Hours:</b> Mon–Sat: 8:00 AM – 5:00 PM</p>
+      </div>
+  <div class="contact-placeholder" style="width:340px;height:240px;background:#f2f2f2;border:2px dashed #bbb;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:16px;min-width:180px;margin-left:-60px;margin-right:64px;">
+    <style>
+      @media (max-width: 900px) {
+        .contact-placeholder {
+          margin-left: 0 !important;
+          width: 100% !important;
+          max-width: 100%;
+          height: 180px !important;
+          margin-top: 16px;
+        }
+        #contact {
+          flex-direction: column;
+        }
+      }
+    </style>
+        <!-- Placeholder for image or map -->
       </div>
     </div>
 
