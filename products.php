@@ -82,7 +82,6 @@ if (isset($_POST['checkout'])) {
             $total += $i['quantity'] * $i['price'];
         }
 
-        // ✅ Include order_type, address, and contact
         $conn->query("INSERT INTO transactions (user_id, total_amount, transaction_date, order_type, delivery_address, contact_number) 
                       VALUES ('$customer_id','$total',NOW(),'$order_type','$delivery_address','$contact_number')");
         $transaction_id = $conn->insert_id;
@@ -212,8 +211,25 @@ if ($transactions_result) {
 <head>
 <meta charset="UTF-8">
 <title>Abeth Hardware - Customer</title>
-<link rel="stylesheet" href="products.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="products.css">
+<style>
+/* ---------------- CUSTOM MOBILE CART FIX ---------------- */
+
+/* Mobile view */
+@media (max-width: 768px) {
+  .right-panel {
+    width: 90%;
+    right: -100%;
+  }
+  .right-panel.active {
+    right: 0;
+  }
+  .cart-float-btn {
+    display: flex !important;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -231,11 +247,9 @@ if ($transactions_result) {
 <div class="layout">
   <div class="left-panel">
     <h2>Available Products</h2>
-
-    <!-- ✅ Category Filter -->
     <form method="GET" style="margin-bottom: 20px;">
       <label for="category"><strong>Filter by Category:</strong></label>
-      <select name="category" id="category" onchange="this.form.submit()" style="padding: 8px; margin-left: 10px;">
+      <select name="category" id="category" onchange="this.form.submit()">
         <option value="">All</option>
         <?php if ($categories && $categories->num_rows > 0): ?>
           <?php while ($cat = $categories->fetch_assoc()): ?>
@@ -261,17 +275,14 @@ if ($transactions_result) {
               <h4><?= htmlspecialchars($p['name']) ?></h4>
               <?= htmlspecialchars($p['category']) ?>
               <p><strong>₱<?= number_format($p['price'], 2) ?></strong></p>
-  
-  <form method="POST">
-  <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-
-  <?php if ($p['stock'] > 0): ?>
-    <button type="submit" class="add-cart-btn" name="add_to_cart">Add</button>
-  <?php else: ?>
-    <button type="button" class="add-cart-btn" disabled style="background-color: #999; cursor: not-allowed;">Out of Stock</button>
-  <?php endif; ?>
-</form>
-
+              <form method="POST">
+                <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                <?php if ($p['stock'] > 0): ?>
+                  <button type="submit" class="add-cart-btn" name="add_to_cart">Add</button>
+                <?php else: ?>
+                  <button type="button" class="add-cart-btn" disabled style="background-color: #999; cursor: not-allowed;">Out of Stock</button>
+                <?php endif; ?>
+              </form>
             </div>
           </div>
         <?php endwhile; ?>
@@ -296,15 +307,12 @@ if ($transactions_result) {
               <strong><?= htmlspecialchars($item['name']) ?></strong><br>
               ₱<?= number_format($item['price'], 2) ?>
             </div>
-
             <div class="cart-controls">
               <form method="POST" style="display:inline;">
                 <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
                 <button class="qty-btn" name="decrease_qty">-</button>
               </form>
-
               <span><?= $item['quantity'] ?></span>
-
               <form method="POST" style="display:inline;">
                 <input type="hidden" name="cart_id" value="<?= $item['cart_id'] ?>">
                 <button class="qty-btn" name="increase_qty">+</button>
@@ -316,7 +324,7 @@ if ($transactions_result) {
         <div class="total-section">
           <p><strong>Subtotal:</strong> ₱<?= number_format($total, 2) ?></p>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <label for="cashInput"><strong>Cash:</strong></label>
+            <label><strong>Cash:</strong></label>
             <input type="number" id="cashInput" placeholder="Enter cash amount" step="0.01" min="0">
           </div>
           <p><strong>Change:</strong> ₱<span id="changeDisplay">0.00</span></p>
@@ -324,27 +332,25 @@ if ($transactions_result) {
 
         <form method="POST" id="checkoutForm">
           <label><strong>Order Type:</strong></label>
-          <select name="order_type" id="orderType" required style="width: 100%; padding: 8px; margin: 10px 0;">
+          <select name="order_type" id="orderType" required>
             <option value="" disabled selected>-- Choose --</option>
             <option value="pickup">Pickup</option>
             <option value="delivery">Delivery</option>
           </select>
-
           <div id="deliveryFields" style="display: none;">
-            <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-            <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <input type="text" name="delivery_address" placeholder="Enter Delivery Address">
+            <input type="text" name="contact_number" placeholder="Enter Contact Number">
           </div>
-
-          <button type="submit" class="add-cart-btn" name="checkout" style="width: 100%;">Checkout</button>
+          <button type="submit" class="add-cart-btn" name="checkout" style="width:100%;">Checkout</button>
         </form>
-
       <?php else: ?>
-        <p>Your cart is empty.</p>  
+        <p>Your cart is empty.</p>
       <?php endif; ?>
     </div>
   </div>
 </div>
 
+<button id="cartToggleBtn" class="cart-float-btn">🛒</button>
 
 <div id="historyPanel" class="history-container">
   <button class="close-btn" onclick="toggleHistory()">×</button>
@@ -372,20 +378,43 @@ function toggleHistory() {
   document.getElementById('historyPanel').classList.toggle('active');
 }
 
+// Cash & change
 const cashInput = document.getElementById('cashInput');
 const changeDisplay = document.getElementById('changeDisplay');
 const subtotal = <?= json_encode($total ?? 0) ?>;
-if (cashInput) {
-  cashInput.addEventListener('input', () => {
-    const cash = parseFloat(cashInput.value) || 0;
-    const change = cash - subtotal;
-    changeDisplay.textContent = change >= 0 ? change.toFixed(2) : "0.00";
-  });
-}
-        document.getElementById('orderType').addEventListener('change', function() {
-          const deliveryFields = document.getElementById('deliveryFields');
-          deliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
-        });
+
+cashInput?.addEventListener('input', () => {
+  const cash = parseFloat(cashInput.value) || 0;
+  const change = Math.max(cash - subtotal, 0);
+  changeDisplay.textContent = change.toFixed(2);
+});
+
+// Delivery fields toggle
+const orderType = document.getElementById('orderType');
+const deliveryFields = document.getElementById('deliveryFields');
+
+orderType?.addEventListener('change', () => {
+  if (orderType.value === 'delivery') {
+    deliveryFields.style.display = 'block';
+  } else {
+    deliveryFields.style.display = 'none';
+  }
+});
+
+// Cart toggle
+const rightPanel = document.querySelector('.right-panel');
+const cartToggleBtn = document.getElementById('cartToggleBtn');
+
+cartToggleBtn.addEventListener('click', () => {
+  rightPanel.classList.toggle('active');
+});
+
+// Close cart when clicking outside
+document.addEventListener('click', (e) => {
+  if (!rightPanel.contains(e.target) && !cartToggleBtn.contains(e.target)) {
+    rightPanel.classList.remove('active');
+  }
+});
 </script>
 
 </body>
