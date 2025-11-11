@@ -236,9 +236,61 @@ if ($transactions_result) {
 <head>
 <meta charset="UTF-8">
 <title>Abeth Hardware - Customer</title>
-<link rel="stylesheet" href="products.css">
+<link rel="stylesheet" href="products.css?v=<?php echo filemtime(__DIR__ . '/products.css'); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
+    // AJAX Add to Cart Function
+    function addToCartAjax(productId, event) {
+      event.preventDefault();
+      
+      // Send AJAX request
+      fetch('add_to_cart_ajax.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'product_id=' + productId
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update cart content
+          document.querySelector('.cart-content').innerHTML = data.cart_html;
+          
+          // Update total if exists
+          const totalElement = document.querySelector('.cart-total strong:last-child');
+          if (totalElement) {
+            totalElement.textContent = '₱' + data.total;
+          }
+          
+          // Update modal total
+          const modalTotal = document.getElementById('modalTotal');
+          if (modalTotal) {
+            modalTotal.textContent = parseFloat(data.total).toFixed(2);
+          }
+          
+          // Update cart badge
+          updateCartBadge();
+          
+          // Show brief success indication
+          const btn = event.target;
+          
+          btn.textContent = '✓ Added!';
+          btn.classList.add('btn-success');
+          
+          setTimeout(() => {
+            btn.textContent = 'Added to cart';
+            btn.classList.remove('btn-success');
+          }, 1000);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+      
+      return false;
+    }
+
     function showProductDetail(id, name, price, description, stock) {
       const detailPanel = document.getElementById('product-detail-panel');
       const detailContent = document.getElementById('detail-content');
@@ -275,7 +327,7 @@ if ($transactions_result) {
             </div>
           </div>
           <div class="detail-footer">
-            <form method="post" class="detail-cart-form">
+            <form method="post" class="detail-cart-form" onsubmit="return addToCartAjax(${id}, event);">
               <input type="hidden" name="product_id" value="${id}">
               <div class="quantity-control">
                 <label for="qty-${id}">Quantity:</label>
@@ -289,26 +341,61 @@ if ($transactions_result) {
         </div>
       `;
       
-      document.body.classList.add('detail-panel-open');
-      detailPanel.style.display = 'block';
+      // Use setTimeout to prevent immediate closing from click event propagation
+      setTimeout(() => {
+        document.body.classList.add('detail-panel-open');
+        detailPanel.style.display = 'block';
+      }, 10);
     }
 
     function closeProductDetail() {
-      document.getElementById('product-detail-panel').style.display = 'none';
+      const detailPanel = document.getElementById('product-detail-panel');
+      detailPanel.style.display = 'none';
+      document.body.classList.remove('detail-panel-open');
     }
+
+    // Close detail panel when clicking the overlay
+    document.addEventListener('DOMContentLoaded', function() {
+      const detailPanel = document.getElementById('product-detail-panel');
+      
+      document.addEventListener('click', function(e) {
+        // Only proceed if detail panel is open
+        if (detailPanel && detailPanel.style.display === 'block') {
+          // Check if click is outside the detail panel content
+          if (!detailPanel.contains(e.target) && !e.target.closest('.product-footer')) {
+            closeProductDetail();
+          }
+        }
+      });
+
+      // Prevent clicks inside the panel from closing it
+      if (detailPanel) {
+        detailPanel.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      }
+    });
 </script>
 </head>
 <body>
 
+<!-- Floating Cart Button for Mobile -->
+<button id="floatingCartBtn" class="floating-cart-btn" onclick="toggleCart()">
+  🛒 <span class="cart-badge" id="cartBadge">0</span>
+</button>
+
 <nav class="header">
   <div class="logo"><a href="index.php" class="logo-link"><strong>Abeth Hardware</strong></a></div>
+  <div class="burger" onclick="toggleMenu()">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
   <div class="top-right">
     <button class="home-btn" onclick="window.location.href='index.php'">Home</button>
     <?php if (isset($_SESSION['username'])): ?>
       <button class="history-btn" onclick="toggleHistory()">History</button>
-      <form action="logout.php" method="POST" style="display: inline;">
-        <button type="submit" class="logout-btn">Logout</button>
-      </form>
+      <button type="button" class="logout-btn" onclick="openLogoutModal()">Logout</button>
     <?php else: ?>
       <!-- guest: no extra button (single Home already present) -->
     <?php endif; ?>
@@ -372,7 +459,7 @@ if ($transactions_result) {
                   Out of Stock
                 <?php endif; ?>
               </p>
-              <form method="POST" onclick="event.stopPropagation()">
+              <form method="POST" onclick="event.stopPropagation()" onsubmit="return addToCartAjax(<?= $p['id'] ?>, event);">
                 <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
                 <?php if ($p['stock'] > 0): ?>
                   <button type="submit" class="add-cart-btn" name="add_to_cart">Add to Cart</button>
@@ -390,6 +477,7 @@ if ($transactions_result) {
   </div>
 
   <div class="right-panel">
+    <button class="close-cart-btn" style="display: none !important; visibility: hidden !important; opacity: 0 !important;">&times;</button>
     <div class="cart-header">Your Cart</div>
     <div class="cart-content">
       <?php
@@ -416,12 +504,6 @@ if ($transactions_result) {
                       <?php
                   }
               }
-              ?>
-              <div class="total-section">
-                  <p><strong>Total: ₱<?= number_format($total, 2) ?></strong></p>
-                  <button onclick="window.location.href='index.php#login-modal'" class="checkout-btn">Login to Checkout</button>
-              </div>
-              <?php
           } else {
               echo "<p>Your cart is empty.</p>";
           }
@@ -460,37 +542,6 @@ if ($transactions_result) {
                   <?php
               }
               ?>
-              <div class="total-section">
-                  <p><strong>Subtotal:</strong> ₱<?= number_format($total, 2) ?></p>
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                      <label for="cashInput"><strong>Cash:</strong></label>
-                      <input type="number" id="cashInput" placeholder="Enter cash amount" step="0.01" min="0">
-                  </div>
-                  <p><strong>Change:</strong> ₱<span id="changeDisplay">0.00</span></p>
-              </div>
-
-              <form method="POST" id="checkoutForm">
-                  <label><strong>Order Type:</strong></label>
-                  <select name="order_type" id="orderType" required style="width: 100%; padding: 8px; margin: 10px 0;">
-                      <option value="" disabled selected>-- Choose --</option>
-                      <option value="pickup">Pickup</option>
-                      <option value="delivery">Delivery</option>
-                  </select>
-
-                  <div id="deliveryFields" style="display: none;">
-                      <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                      <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                  </div>
-
-                  <button type="submit" class="add-cart-btn" name="checkout" style="width: 100%;">Checkout</button>
-              </form>
-
-              <script>
-              document.getElementById('orderType').addEventListener('change', function() {
-                  const deliveryFields = document.getElementById('deliveryFields');
-                  deliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
-              });
-              </script>
               <?php
           } else {
               echo "<p>Your cart is empty.</p>";
@@ -498,6 +549,99 @@ if ($transactions_result) {
       }
       ?>
     </div>
+    
+    <!-- Checkout Section - Outside scrollable area -->
+    <?php if ($total > 0): ?>
+    <div class="checkout-section">
+      <div class="total-section">
+          <p><strong>Subtotal:</strong> ₱<?= number_format($total, 2) ?></p>
+      </div>
+
+      <?php if (isset($_SESSION['username'])): ?>
+      <!-- Mobile: Show Checkout Button -->
+      <button type="button" onclick="openCheckoutModal()" class="add-cart-btn mobile-checkout-btn" style="width: 100%; padding: 18px; font-size: 18px; font-weight: bold;">Checkout</button>
+      
+      <!-- Desktop: Show Inline Checkout Form -->
+      <form method="POST" class="desktop-checkout-form">
+        <div style="margin-bottom: 15px;">
+          <label for="desktopCashInput" style="display: block; margin-bottom: 5px;"><strong>Cash Amount:</strong></label>
+          <input type="number" id="desktopCashInput" name="cash" placeholder="Enter cash amount" step="0.01" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <p><strong>Change:</strong> ₱<span id="desktopChangeDisplay">0.00</span></p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="desktopOrderType" style="display: block; margin-bottom: 5px;"><strong>Order Type:</strong></label>
+          <select name="order_type" id="desktopOrderType" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+            <option value="" disabled selected>-- Choose --</option>
+            <option value="pickup">Pickup</option>
+            <option value="delivery">Delivery</option>
+          </select>
+        </div>
+
+        <div id="desktopDeliveryFields" style="display: none;">
+          <div style="margin-bottom: 15px;">
+            <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <button type="submit" name="checkout" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Complete Checkout</button>
+      </form>
+      <?php else: ?>
+      <button onclick="openLoginModal()" class="checkout-btn" style="width: 100%;">Login to Checkout</button>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: #004080; margin: 0;">Checkout</h2>
+      <span onclick="event.stopPropagation(); closeCheckoutModal();" style="font-size: 28px; cursor: pointer; color: red; font-weight: bold; transition: color 0.2s;" onmouseover="this.style.color='darkred'" onmouseout="this.style.color='red'">&times;</span>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <p><strong>Total Amount:</strong> ₱<span id="modalTotal"><?= number_format($total, 2) ?></span></p>
+    </div>
+
+    <form method="POST" id="checkoutForm">
+      <div style="margin-bottom: 15px;">
+        <label for="cashInput" style="display: block; margin-bottom: 5px;"><strong>Cash Amount:</strong></label>
+        <input type="number" id="cashInput" placeholder="Enter cash amount" step="0.01" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <p><strong>Change:</strong> ₱<span id="changeDisplay">0.00</span></p>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label for="orderType" style="display: block; margin-bottom: 5px;"><strong>Order Type:</strong></label>
+        <select name="order_type" id="orderType" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <option value="" disabled selected>-- Choose --</option>
+          <option value="pickup">Pickup</option>
+          <option value="delivery">Delivery</option>
+        </select>
+      </div>
+
+      <div id="deliveryFields" style="display: none;">
+        <div style="margin-bottom: 15px;">
+          <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <button type="submit" name="checkout" style="width: 100%; padding: 18px; background: #004080; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px;">Complete Checkout</button>
+    </form>
   </div>
 </div>
 
@@ -524,21 +668,273 @@ if ($transactions_result) {
 </div>
 
 <script>
-function toggleHistory() {
-  document.getElementById('historyPanel').classList.toggle('active');
+function toggleMenu() {
+  const topRight = document.querySelector('.top-right');
+  topRight.classList.toggle('active');
 }
 
+function toggleCart() {
+  const rightPanel = document.querySelector('.right-panel');
+  const closeCartBtn = document.querySelector('.close-cart-btn');
+  const floatingCartBtn = document.getElementById('floatingCartBtn');
+  rightPanel.classList.toggle('active');
+  
+  // Show/hide close button based on cart state
+  if (rightPanel.classList.contains('active')) {
+    closeCartBtn.style.display = 'flex';
+    closeCartBtn.style.visibility = 'visible';
+    closeCartBtn.style.opacity = '1';
+    // Hide floating cart button when cart is open
+    if (floatingCartBtn) {
+      floatingCartBtn.style.setProperty('display', 'none', 'important');
+      floatingCartBtn.style.setProperty('visibility', 'hidden', 'important');
+      floatingCartBtn.style.setProperty('opacity', '0', 'important');
+    }
+  } else {
+    closeCartBtn.style.display = 'none';
+    closeCartBtn.style.visibility = 'hidden';
+    closeCartBtn.style.opacity = '0';
+    // Show floating cart button when cart is closed
+    if (floatingCartBtn) {
+      floatingCartBtn.style.setProperty('display', 'flex', 'important');
+      floatingCartBtn.style.setProperty('visibility', 'visible', 'important');
+      floatingCartBtn.style.setProperty('opacity', '1', 'important');
+    }
+  }
+}
+
+function updateCartBadge() {
+  const cartRows = document.querySelectorAll('.cart-row');
+  const badge = document.getElementById('cartBadge');
+  let totalItems = 0;
+  
+  cartRows.forEach(row => {
+    const qtyElement = row.querySelector('.cart-controls span');
+    if (qtyElement) {
+      totalItems += parseInt(qtyElement.textContent) || 0;
+    }
+  });
+  
+  badge.textContent = totalItems;
+  badge.style.display = totalItems > 0 ? 'flex' : 'none';
+}
+
+// Update badge on page load
+document.addEventListener('DOMContentLoaded', updateCartBadge);
+
+function toggleHistory() {
+  const historyPanel = document.getElementById('historyPanel');
+  historyPanel.classList.toggle('active');
+  document.body.classList.toggle('history-panel-open');
+}
+
+// Close history panel when clicking the overlay
+document.addEventListener('DOMContentLoaded', function() {
+  const historyPanel = document.getElementById('historyPanel');
+  const rightPanel = document.querySelector('.right-panel');
+  const closeCartBtn = document.querySelector('.close-cart-btn');
+  
+  // Add explicit handler for close cart button to prevent event bubbling
+  if (closeCartBtn) {
+    closeCartBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      // Only toggle cart if cart is actually active
+      if (rightPanel && rightPanel.classList.contains('active')) {
+        toggleCart();
+      }
+    });
+  }
+  
+  document.addEventListener('click', function(e) {
+    // Skip if clicking the close cart button
+    if (e.target.closest('.close-cart-btn')) {
+      return;
+    }
+    
+    // Close history panel if clicking outside
+    if (historyPanel && historyPanel.classList.contains('active')) {
+      // Ignore clicks on history button, cart panel, and floating cart button
+      if (!historyPanel.contains(e.target) && 
+          !e.target.closest('.history-btn') && 
+          !e.target.closest('.right-panel') &&
+          !e.target.closest('.floating-cart-btn')) {
+        toggleHistory();
+      }
+    }
+    
+    // Close cart panel if clicking outside (but not on floating cart button)
+    if (rightPanel && rightPanel.classList.contains('active')) {
+      if (!rightPanel.contains(e.target) && 
+          !e.target.closest('.floating-cart-btn')) {
+        toggleCart();
+      }
+    }
+  });
+
+  // Prevent clicks inside the panels from closing them
+  if (historyPanel) {
+    historyPanel.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+  
+  if (rightPanel) {
+    rightPanel.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+});
+
+// Checkout modal functions
+function openCheckoutModal() {
+  document.getElementById('checkout-modal').style.display = 'flex';
+}
+
+function closeCheckoutModal() {
+  document.getElementById('checkout-modal').style.display = 'none';
+}
+
+// Order type change handler - for both mobile modal and desktop form
+document.addEventListener('DOMContentLoaded', function() {
+  // Prevent checkout modal clicks from closing cart
+  const checkoutModal = document.getElementById('checkout-modal');
+  if (checkoutModal) {
+    checkoutModal.addEventListener('click', function(e) {
+      // Only close modal if clicking the overlay, not the content
+      if (e.target === checkoutModal) {
+        closeCheckoutModal();
+      }
+      // Stop propagation to prevent cart from closing
+      e.stopPropagation();
+    });
+  }
+
+  // Mobile modal order type
+  const orderType = document.getElementById('orderType');
+  if (orderType) {
+    orderType.addEventListener('change', function() {
+      const deliveryFields = document.getElementById('deliveryFields');
+      deliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
+    });
+  }
+
+  // Desktop form order type
+  const desktopOrderType = document.getElementById('desktopOrderType');
+  if (desktopOrderType) {
+    desktopOrderType.addEventListener('change', function() {
+      const desktopDeliveryFields = document.getElementById('desktopDeliveryFields');
+      desktopDeliveryFields.style.display = this.value === 'delivery' ? 'block' : 'none';
+    });
+  }
+});
+
+// Mobile modal cash input
 const cashInput = document.getElementById('cashInput');
 const changeDisplay = document.getElementById('changeDisplay');
-const subtotal = <?= json_encode($total ?? 0) ?>;
 if (cashInput) {
   cashInput.addEventListener('input', () => {
+    const modalTotal = document.getElementById('modalTotal');
+    const subtotal = modalTotal ? parseFloat(modalTotal.textContent) : <?= json_encode($total ?? 0) ?>;
     const cash = parseFloat(cashInput.value) || 0;
     const change = cash - subtotal;
     changeDisplay.textContent = change >= 0 ? change.toFixed(2) : "0.00";
   });
 }
+
+// Desktop form cash input
+const desktopCashInput = document.getElementById('desktopCashInput');
+const desktopChangeDisplay = document.getElementById('desktopChangeDisplay');
+if (desktopCashInput) {
+  desktopCashInput.addEventListener('input', () => {
+    const subtotal = <?= json_encode($total ?? 0) ?>;
+    const cash = parseFloat(desktopCashInput.value) || 0;
+    const change = cash - subtotal;
+    desktopChangeDisplay.textContent = change >= 0 ? change.toFixed(2) : "0.00";
+  });
+}
+
+// Logout modal functions
+function openLogoutModal() {
+  document.getElementById('logout-modal').style.display = 'flex';
+}
+
+function closeLogoutModal() {
+  document.getElementById('logout-modal').style.display = 'none';
+}
+
+// Login/Signup modal functions
+function openLoginModal() {
+  document.getElementById('login-modal').style.display = 'flex';
+}
+
+function closeLoginModal() {
+  document.getElementById('login-modal').style.display = 'none';
+}
+
+function openSignupModal() {
+  closeLoginModal();
+  document.getElementById('signup-modal').style.display = 'flex';
+}
+
+function closeSignupModal() {
+  document.getElementById('signup-modal').style.display = 'none';
+}
+
+function switchToLogin() {
+  closeSignupModal();
+  openLoginModal();
+}
 </script>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="position: relative; margin-bottom: 20px;">
+      <h2 style="color: #004080; margin: 0; text-align: center;">Login</h2>
+      <span onclick="closeLoginModal()" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
+    </div>
+    <form method="POST" action="login.php">
+      <input type="text" name="username" placeholder="Username or Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Login</button>
+      <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="openSignupModal(); return false;" style="color: #004080; font-weight: bold;">Sign Up</a></p>
+    </form>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div id="signup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+    <div style="position: relative; margin-bottom: 20px;">
+      <h2 style="color: #004080; margin: 0; text-align: center;">Sign Up</h2>
+      <span onclick="closeSignupModal()" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
+    </div>
+    <form method="POST" action="register.php">
+      <input type="text" name="fname" placeholder="First Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="lname" placeholder="Last Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="address" placeholder="Address" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password_confirm" placeholder="Confirm Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Create Account</button>
+      <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="switchToLogin(); return false;" style="color: #004080; font-weight: bold;">Login</a></p>
+    </form>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h2 style="color: #004080; margin-bottom: 20px;">Confirm Logout</h2>
+    <p style="margin: 20px 0; color: #333;">Are you sure you want to logout?</p>
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+      <button onclick="window.location.href='logout.php'" style="background: #004080; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Yes, Logout</button>
+      <button onclick="closeLogoutModal()" style="background: #ccc; color: #333; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Cancel</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

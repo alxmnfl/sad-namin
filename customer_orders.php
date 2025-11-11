@@ -72,19 +72,21 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
     }
 
     h1 {
-      color: #004080;
-      text-align: center;
-      margin-bottom: 15px;
+  color: #004080;
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: 900;
+  font-size: 2.1rem;
     }
 
     .top-buttons {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
 
-    .back-btn, .download-btn {
+    .back-btn {
       background-color: #004080;
       color: white;
       padding: 10px 20px;
@@ -97,8 +99,35 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
       transition: background 0.3s ease;
     }
 
-    .back-btn:hover, .download-btn:hover {
+    .back-btn:hover {
       background-color: #0059b3;
+    }
+
+    .download-btn {
+      background-color: #004080;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    .download-btn:hover {
+      background-color: #0059b3;
+    }
+
+    /* Desktop: Download button in top buttons */
+    .top-buttons .download-btn {
+      display: inline-block;
+    }
+
+    /* Desktop: Hide download section below table */
+    .download-section {
+      display: none;
     }
 
     table {
@@ -108,9 +137,10 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
     }
 
     th, td {
-      padding: 10px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  font-weight: 700;
     }
 
     th {
@@ -154,9 +184,44 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
         padding: 15px;
       }
 
+      /* Mobile: Change top buttons layout */
       .top-buttons {
-        flex-direction: column;
-        gap: 10px;
+        justify-content: flex-start;
+      }
+
+      /* Mobile: Make back button yellow */
+      .back-btn {
+        background-color: #ffcc00;
+        color: #00264d;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .back-btn:hover {
+        background-color: #e6b800;
+      }
+
+      /* Mobile: Hide download button from top */
+      .top-buttons .download-btn {
+        display: none;
+      }
+
+      /* Mobile: Show download section below table */
+      .download-section {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 10px;
+      }
+
+      .download-section .download-btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 15px;
       }
 
       table, th, td {
@@ -268,6 +333,11 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
           <a href="?page=<?= $current_page + 1 ?>" class="page-btn">Next →</a>
         <?php endif; ?>
       </div>
+
+      <!-- Download Report Button (Mobile Only) -->
+      <div class="download-section">
+        <button class="download-btn" id="downloadPDFMobile">⬇ Download Report</button>
+      </div>
     </div>
 
     <!-- PAGE 2: SALES SUMMARY -->
@@ -309,8 +379,8 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
       }
     });
 
-    // PDF Download (2 pages)
-    document.getElementById('downloadPDF').addEventListener('click', async () => {
+    // PDF Download function
+    async function downloadPDFReport() {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('p', 'mm', 'a4');
 
@@ -329,7 +399,11 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
       pdf.addImage(img2, 'PNG', 10, 10, imgWidth, imgHeight2);
 
       pdf.save('Transaction_Report.pdf');
-    });
+    }
+
+    // Attach download function to both buttons
+    document.getElementById('downloadPDF').addEventListener('click', downloadPDFReport);
+    document.getElementById('downloadPDFMobile').addEventListener('click', downloadPDFReport);
   </script>
 </body>
 </html>

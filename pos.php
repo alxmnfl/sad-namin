@@ -13,11 +13,11 @@ if ($conn->connect_error) {
 
 $selected_category = isset($_GET['category']) ? $conn->real_escape_string($_GET['category']) : '';
 if (!empty($selected_category)) {
-    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 AND category = '$selected_category' ORDER BY id DESC");
+    $products = $conn->query("SELECT * FROM products WHERE category = '$selected_category' ORDER BY id DESC");
 } else {
-    $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
+    $products = $conn->query("SELECT * FROM products ORDER BY id DESC");
 }
-$categories = $conn->query("SELECT DISTINCT category FROM products_ko WHERE category IS NOT NULL AND category != ''");
+$categories = $conn->query("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ''");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,29 +25,36 @@ $categories = $conn->query("SELECT DISTINCT category FROM products_ko WHERE cate
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Point of Sale (POS) - Abeth Hardware</title>
-<link rel="stylesheet" href="pos.css">
+<link rel="stylesheet" href="pos.css?v=<?= time() ?>">
 </head>
 <body>
 
 <nav>
   <div class="logo">Abeth Hardware POS</div>
+  
   <div class="nav-buttons">
     <a href="admin.php"><button class="back-btn">⬅ Back to Dashboard</button></a>
     <button id="toggleCartBtn" class="floating-cart-btn">🛒</button>
   </div>
 </nav>
 
-<!-- ✅ Category Filter -->
-<form method="GET" style="margin-bottom: 20px;">
-  <label for="category"><strong>Filter by Category:</strong></label>
-  <select name="category" id="category" onchange="this.form.submit()" style="padding: 8px; margin-left: 10px;">
-    <option value="">All</option>
-    <?php if ($categories && $categories->num_rows > 0): ?>
-      <?php while ($cat = $categories->fetch_assoc()): ?>
-        <option value="<?= htmlspecialchars($cat['category']) ?>" 
-          <?= ($selected_category === $cat['category']) ? 'selected' : '' ?>>
-          <?= htmlspecialchars($cat['category']) ?>
-        </option>
+<!-- Mobile Back Button (shows below header on mobile) -->
+<div class="mobile-back-container">
+  <a href="admin.php"><button class="mobile-back-btn">⬅ Back to Dashboard</button></a>
+</div>
+
+<div style="padding: 10px;">
+  <!-- ✅ Category Filter -->
+  <form method="GET" style="margin-bottom: 20px; padding-left: 10px;">
+    <label for="category"><strong>Filter by Category:</strong></label>
+    <select name="category" id="category" onchange="this.form.submit()" style="padding: 8px; margin-left: 10px;">
+      <option value="">All</option>
+      <?php if ($categories && $categories->num_rows > 0): ?>
+        <?php while ($cat = $categories->fetch_assoc()): ?>
+          <option value="<?= htmlspecialchars($cat['category']) ?>" 
+            <?= ($selected_category === $cat['category']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($cat['category']) ?>
+          </option>
       <?php endwhile; ?>
     <?php endif; ?>
   </select>
@@ -84,6 +91,7 @@ $categories = $conn->query("SELECT DISTINCT category FROM products_ko WHERE cate
   <?php else: ?>
     <p>No products available.</p>
   <?php endif; ?>
+</div>
 </div>
 
 <!-- 🛒 Floating Cart -->

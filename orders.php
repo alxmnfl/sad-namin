@@ -54,7 +54,7 @@ $transactions = $conn->query($query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - Abeth Hardware</title>
-    <link rel="stylesheet" href="orders.css">
+    <link rel="stylesheet" href="orders.css?v=<?php echo filemtime(__DIR__ . '/orders.css'); ?>">
 </head>
 <body>
 
@@ -65,16 +65,20 @@ $transactions = $conn->query($query);
     </div>
 
     <table class="orders-table">
+        <thead>
         <tr>
             <th>ID</th>
             <th>Customer</th>
             <th>Method</th>
             <th>Address</th>
+            <th>Contact</th>
             <th>Total</th>
             <th>Date</th>
             <th>Status</th>
             <th>Action</th>
         </tr>
+        </thead>
+        <tbody>
 
         <?php if ($transactions && $transactions->num_rows > 0): ?>
             <?php while ($row = $transactions->fetch_assoc()): ?>
@@ -84,18 +88,19 @@ $transactions = $conn->query($query);
                     $isSuccess = strtolower($row['status']) === 'success';
                 ?>
                 <tr>
-                    <td><?= $row['transaction_id'] ?></td>
-                    <td><?= htmlspecialchars($customer_name) ?></td>
-                    <td><?= htmlspecialchars(ucfirst($row['order_type'])) ?></td>
-                    <td><?= htmlspecialchars($row['delivery_address'] ?? 'N/A') ?></td>
-                    <td>₱<?= number_format($row['total_amount'], 2) ?></td>
-                    <td><?= htmlspecialchars($row['transaction_date']) ?></td>
-                    <td>
+                    <td data-label="ID"><?= $row['transaction_id'] ?></td>
+                    <td data-label="Customer"><?= htmlspecialchars($customer_name) ?></td>
+                    <td data-label="Method"><?= htmlspecialchars(ucfirst($row['order_type'])) ?></td>
+                    <td data-label="Address"><?= htmlspecialchars($row['delivery_address'] ?? 'N/A') ?></td>
+                    <td data-label="Contact"><?= htmlspecialchars($row['contact_number'] ?? 'N/A') ?></td>
+                    <td data-label="Total">₱<?= number_format($row['total_amount'], 2) ?></td>
+                    <td data-label="Date"><?= htmlspecialchars($row['transaction_date']) ?></td>
+                    <td data-label="Status">
                         <span class="status-badge <?= strtolower($row['status']) ?>">
                             <?= htmlspecialchars($row['status']) ?>
                         </span>
                     </td>
-                    <td>
+                    <td data-label="Action">
                         <label class="switch">
                             <input type="checkbox" class="status-toggle" 
                                    data-id="<?= $row['transaction_id'] ?>"
@@ -106,8 +111,9 @@ $transactions = $conn->query($query);
                 </tr>
             <?php endwhile; ?>
         <?php else: ?>
-            <tr><td colspan="8">No transactions found.</td></tr>
+            <tr><td colspan="9">No transactions found.</td></tr>
         <?php endif; ?>
+        </tbody>
     </table>
 
     <!-- Pagination -->

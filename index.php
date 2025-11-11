@@ -13,21 +13,34 @@
 
     <nav>
       <div class="logo"><strong>Abeth Hardware</strong></div>
-      <div class="menu">
-        <a href="#">Home</a>
+      
+      <!-- Burger Icon -->
+      <div class="burger" onclick="toggleHomeMenu()">
+        ☰
+      </div>
+      
+      <div class="menu" id="homeNavMenu">
         <a href="#categories">Categories</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
 
         <?php if (isset($_SESSION['username'])): ?>
-          <span>Welcome, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></span>
-          <a href="logout.php">Logout</a>
+          <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+            <a href="admin.php" style="background: #ffcc00; color: #004080; padding: 6px 12px; border-radius: 6px; font-weight: bold;">Admin</a>
+          <?php endif; ?>
+          <a href="#" onclick="openModal('logout-modal'); return false;" class="logout-btn">Logout</a>
         <?php else: ?>
-    <a href="#" onclick="openModal('login-modal'); return false;">Sign In</a> |
     <a href="#" onclick="openModal('register-modal'); return false;">Sign Up</a>
+    <a href="#" onclick="openModal('login-modal'); return false;">Login</a>
         <?php endif; ?>
       </div>
     </nav>
+    
+<script>
+function toggleHomeMenu() {
+  document.getElementById("homeNavMenu").classList.toggle("active");
+}
+</script>
 
     <header>
       <h1>Exclusive Range of Hardware Materials</h1>
@@ -96,61 +109,52 @@
     </footer>
 
     <!-- LOGIN MODAL -->
-    <div id="login-modal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal('login-modal')">&times;</span>
-        <h2>Sign In</h2>
+    <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+      <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="position: relative; margin-bottom: 20px;">
+          <h2 style="color: #004080; margin: 0; text-align: center;">Login</h2>
+          <span onclick="closeModal('login-modal')" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
+        </div>
         <form method="POST" action="login.php">
-          <input type="text" name="username" placeholder="Username or Email" required>
-    <div class="password-field">
-            <input id="login-password" type="password" name="password" placeholder="Password" required class="modal-input password-input">
-            <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)" aria-pressed="false" aria-label="Show password" title="Show password"> 
-              <!-- eye icon (open) -->
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          <button type="submit">Sign In</button>
-          <p>Don’t have an account? <a href="#" onclick="switchModal('login-modal','register-modal')">Sign Up</a></p>
+          <input type="text" name="username" placeholder="Username or Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Login</button>
+          <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="switchModal('login-modal','register-modal'); return false;" style="color: #004080; font-weight: bold;">Sign Up</a></p>
         </form>
       </div>
     </div>
 
     <!-- REGISTER MODAL -->
-    <div id="register-modal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal('register-modal')">&times;</span>
-        <h2>Create Account</h2>
+    <div id="register-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+      <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+        <div style="position: relative; margin-bottom: 20px;">
+          <h2 style="color: #004080; margin: 0; text-align: center;">Sign Up</h2>
+          <span onclick="closeModal('register-modal')" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
+        </div>
         <form method="POST" action="register.php" id="register-form" autocomplete="off">
-          <input type="text" name="fname" placeholder="First Name" required>
-          <input type="text" name="lname" placeholder="Last Name" required>
-          <input type="text" name="address" placeholder="Address" required>
-          <input type="email" name="email" placeholder="Email" required>
-          <input type="text" name="username" placeholder="Username" required>
-          <div class="password-field">
-            <input id="register-password" type="password" name="password" placeholder="Password" required class="modal-input password-input">
-            <button type="button" class="password-toggle" onclick="togglePassword('register-password', this)" aria-pressed="false" aria-label="Show password" title="Show password">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          <div class="password-field">
-            <input id="register-password-confirm" type="password" name="password_confirm" placeholder="Confirm Password" required class="modal-input password-input">
-            <button type="button" class="password-toggle" onclick="togglePassword('register-password-confirm', this)" aria-pressed="false" aria-label="Show password" title="Show password">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="#004080" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          <div id="register-error" style="color:#c00; font-size:13px; min-height:18px; margin-bottom:2px; display:none;"></div>
-          <button type="submit">Create Account</button>
-          <p>Already have an account? <a href="#" onclick="switchModal('register-modal','login-modal'); return false;">Login</a></p>
+          <input type="text" name="fname" placeholder="First Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="text" name="lname" placeholder="Last Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="text" name="address" placeholder="Address" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="password" name="password_confirm" placeholder="Confirm Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Create Account</button>
+          <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="switchModal('register-modal','login-modal'); return false;" style="color: #004080; font-weight: bold;">Login</a></p>
         </form>
+      </div>
+    </div>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div id="logout-modal" class="modal">
+      <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <span class="close" onclick="closeModal('logout-modal')">&times;</span>
+        <h2>Confirm Logout</h2>
+        <p style="margin: 20px 0;">Are you sure you want to logout?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button onclick="window.location.href='logout.php'" style="background: #004080; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Yes, Logout</button>
+          <button onclick="closeModal('logout-modal')" style="background: #ccc; color: #333; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Cancel</button>
+        </div>
       </div>
     </div>
 

@@ -25,6 +25,15 @@ nav .logo {
   font-weight: bold;
 }
 
+/* Burger Menu Icon */
+nav .burger {
+  display: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: white;
+  padding: 5px 10px;
+}
+
 nav .menu {
   display: flex;
   align-items: center;
@@ -51,8 +60,8 @@ nav .menu span {
 }
 
 nav .menu a.logout-btn {
-  background-color: #ffcc00;
-  color: #004080;
+  background-color: #004080;
+  color: white;
   padding: 6px 12px;
   border-radius: 6px;
   font-weight: bold;
@@ -60,8 +69,88 @@ nav .menu a.logout-btn {
 }
 
 nav .menu a.logout-btn:hover {
-  background-color: #e6b800;
+  background-color: red;
   color: #00264d;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  nav {
+    position: relative;
+  }
+
+  nav .burger {
+    display: block;
+  }
+
+  nav .menu {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #004080;
+    padding: 15px 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    box-sizing: border-box;
+  }
+
+  nav .menu.active {
+    display: flex;
+  }
+
+  nav .menu a {
+    width: 100%;
+    max-width: 100%;
+    margin: 8px 0;
+    padding: 10px 15px;
+    text-align: center;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  nav .menu a.logout-btn {
+    align-self: center;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* Header Responsive Styles */
+  header {
+    padding: 80px 20px !important;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  header h1 {
+    font-size: 1.8rem !important;
+    margin-bottom: 15px !important;
+    line-height: 1.3 !important;
+    padding: 0 10px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  header p {
+    font-size: 1rem !important;
+    margin-bottom: 25px !important;
+    line-height: 1.5 !important;
+    padding: 0 15px;
+    text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.6);
+  }
+
+  header button {
+    padding: 14px 30px !important;
+    font-size: 1.1rem !important;
+    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.4);
+  }
 }
 
 /* ==============================

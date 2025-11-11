@@ -22,6 +22,15 @@ nav .logo {
   font-weight: bold;
 }
 
+/* Burger Menu Icon */
+nav .burger {
+  display: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: white;
+  padding: 5px 10px;
+}
+
 .nav-buttons {
   display: flex;
   align-items: center;
@@ -33,28 +42,36 @@ nav .logo {
 
 /* Back Button Style */
 .back-btn {
-  background-color: #004080;
-  color: #fff;
-  border: 2px solid #004080;
+  background-color: #ffcc00;
+  color: #004080;
+  border: 2px solid #ffcc00;
   padding: 8px 16px;
   border-radius: 6px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(255, 204, 0, 0.3);
 }
 
 .back-btn:hover {
-  background-color: #0066cc;
-  color: #fff;
+  background-color: #e6b800;
+  border-color: #e6b800;
+  color: #004080;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 204, 0, 0.4);
 }
 
 
 /* PRODUCT SECTION */
-.container {
-  display: flex;
-  flex-wrap: wrap;
+.container,
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px;
+  justify-items: center;
   padding: 10px;
   margin-right: 360px; /* space for cart */
+  margin-top: 20px;
 }
 
   form[method="GET"] {
@@ -63,7 +80,7 @@ nav .logo {
       align-items: center;
       gap: 12px;
       background: transparent;
-      padding: 0;
+      padding: 0 10px;
     }
 
     form[method="GET"] label {
@@ -97,17 +114,27 @@ nav .logo {
       box-shadow: 0 0 0 2px rgba(0,64,128,0.1);
       background-color: #fff;
     }
+    
     .product-card {
-      width: 160px;
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      padding: 8px;
-      margin: 5px;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 160px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
       text-align: center;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0;
+      box-sizing: border-box;
+      border: 1px solid #e0e0e0;
+    }
+
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .product-card img,
@@ -115,34 +142,43 @@ nav .logo {
       width: 100%;
       height: 120px;
       display: block;
-      background: #f5f5f5;
-      margin-bottom: 8px;
+      object-fit: contain;
+      padding: 8px;
+      box-sizing: border-box;
+      transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    .product-card:hover img {
+      transform: scale(1.06);
+      filter: saturate(1.05) contrast(1.02);
     }
 
     .product-card .no-image {
-      background: #f5f5f5;
-      color: #666;
-      font-weight: normal;
+      background: #f0f0f0;
+      color: #555;
+      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.9rem;
+      padding: 0;
     }
 
     .product-card h3,
+    .product-card h4,
     .product-card p {
       text-align: center;
       width: 100%;
       margin: 5px 0;
       font-size: 0.9rem;
-      padding: 0;
+      padding: 0 8px;
     }
 
     .product-footer {
       color: #333;
       width: 100%;
       font-size: 0.9rem;
-      margin: 4px 0;
+      padding: 0 8px 8px 8px;
     }
 
     .product-footer strong {
@@ -151,6 +187,13 @@ nav .logo {
       font-weight: 600;
       display: block;
     }
+
+    /* Entrance animation for product cards */
+    @keyframes cardEntrance {
+      from { transform: translateY(6px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .product-card { animation: cardEntrance 360ms ease both; }
 
     .add-cart-btn,
     .product-card button {
@@ -254,33 +297,61 @@ nav .logo {
 .floating-cart-btn {
   display: none; /* hidden on desktop */
 }
-
+/* Mobile Back Button - Hidden on Desktop */
+.mobile-back-container {
+  display: none;
+}
 
 @media (max-width: 768px) {
-  .floating-cart-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    background-color: #004080;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  /* Product grid - 2 columns on mobile */
+  .container,
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 10px;
+    margin-right: 0;
+    margin-bottom: 80px;
+  }
+
+  /* Hide desktop nav buttons on mobile */
+  .nav-buttons {
+    display: none !important;
+  }
+
+  /* Show mobile back button below header */
+  .mobile-back-container {
+    display: block;
+    padding: 15px 20px;
+    background: #f9fafb;
+  }
+
+  .mobile-back-btn {
+    width: 100%;
+    background-color: #ffcc00;
+    color: #004080;
+    border: 2px solid #ffcc00;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
-    z-index: 1100;
+    box-shadow: 0 2px 6px rgba(255, 204, 0, 0.3);
+  }
+
+  .mobile-back-btn:hover {
+    background-color: #e6b800;
+    border-color: #e6b800;
+  }
+
+  .floating-cart-btn {
+    /* Hidden on mobile per request */
+    display: none !important;
   }
 
   .floating-cart-btn:hover {
-    background-color: #0066cc;
-    transform: scale(1.05);
+    /* Removed hover effect (button hidden on mobile) */
+    display: none !important;
   }
 
   /* Hide cart by default on mobile */
