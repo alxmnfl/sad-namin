@@ -167,18 +167,32 @@ function checkout() {
     alert('No items in cart!');
     return;
   }
-  alert('Transaction recorded successfully!');
-  cart = {};
-  updateCartDisplay();
+
+  const items = [];
+  let total = 0;
+
+  for (const id in cart) {
+    items.push({ id: id, qty: cart[id].qty, price: cart[id].price });
+    total += cart[id].price * cart[id].qty;
+  }
+
+  fetch('save_pos_transaction.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ total, items })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert('✅ Transaction saved successfully!');
+      cart = {};
+      updateCartDisplay();
+    } else {
+      alert('❌ Failed to save transaction.');
+    }
+  });
 }
 
-const cartContainer = document.querySelector('.cart-container');
-const toggleCartBtn = document.getElementById('toggleCartBtn');
-
-toggleCartBtn.addEventListener('click', () => {
-  const isActive = cartContainer.classList.toggle('active');
-  toggleCartBtn.textContent = isActive ? '→' : '🛒';
-});
 </script>
 
 </body>

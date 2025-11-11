@@ -214,9 +214,7 @@ if ($transactions_result) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="products.css">
 <style>
-/* ---------------- CUSTOM MOBILE CART FIX ---------------- */
 
-/* Mobile view */
 @media (max-width: 768px) {
   .right-panel {
     width: 90%;
