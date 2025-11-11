@@ -99,9 +99,6 @@ function toggleHomeMenu() {
         <p><b>Email:</b> abethhardware@gmail.com</p>
         <p><b>Business Hours:</b> Mon–Sat: 8:00 AM – 5:00 PM</p>
       </div>
-      <div class="map">
-        <img src="map.jpg" alt="Abeth Hardware Location">
-      </div>
     </div>
 
     <footer>
@@ -216,10 +213,11 @@ function toggleHomeMenu() {
       // Register form password match validation
       document.addEventListener('DOMContentLoaded', function() {
         var regForm = document.getElementById('register-form');
-        if (regForm) {
-          var pw = document.getElementById('register-password');
-          var pwc = document.getElementById('register-password-confirm');
-          var err = document.getElementById('register-error');
+        var pw = document.getElementById('register-password');
+        var pwc = document.getElementById('register-password-confirm');
+        var err = document.getElementById('register-error');
+        
+        if (regForm && pw && pwc && err) {
           function checkMatch() {
             if (pw.value && pwc.value && pw.value !== pwc.value) {
               err.textContent = 'Passwords do not match.';
