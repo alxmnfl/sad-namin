@@ -1,16 +1,13 @@
 <?php
 session_start();
+require_once 'config.php';
 
 header('Content-Type: application/json');
 
 // Initialize customer_id for guests
 $customer_id = isset($_SESSION['id']) ? $_SESSION['id'] : 0;
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Connection failed']);
-    exit;
-}
+$conn = getDatabaseConnection();
 
 if (isset($_POST['product_id'])) {
     $product_id = intval($_POST['product_id']);

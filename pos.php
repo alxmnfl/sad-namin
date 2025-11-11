@@ -1,15 +1,13 @@
 <?php
 session_start();
+require_once 'config.php';
 
 if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['staff', 'admin'])) {
     header("Location: index.php");
     exit();
 }
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 $selected_category = isset($_GET['category']) ? $conn->real_escape_string($_GET['category']) : '';
 if (!empty($selected_category)) {

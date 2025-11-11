@@ -1,13 +1,11 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // Initialize customer_id for guests
 $customer_id = isset($_SESSION['id']) ? $_SESSION['id'] : 0;
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 /* ---------------- FETCH USER EMAIL ---------------- */
 $user_email = "";

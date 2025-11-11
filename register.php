@@ -1,13 +1,9 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // ✅ Database Connection
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-
-// Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 // ✅ Check if form was submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {

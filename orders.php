@@ -1,14 +1,13 @@
 <?php
 session_start();
+require_once 'config.php';
+
 if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
     header("Location: index.php");
     exit();
 }
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 /* ---------------- UPDATE TRANSACTION STATUS (AJAX) ---------------- */
 if (isset($_POST['ajax_update'])) {

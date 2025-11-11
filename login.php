@@ -1,10 +1,8 @@
 <?php
 session_start();
+require_once 'config.php';
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];

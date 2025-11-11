@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // Redirect if not admin
 if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
@@ -7,10 +8,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
     exit();
 }
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = getDatabaseConnection();
 
 /* ---------------- ADD PRODUCT ---------------- */
 if (isset($_POST['add_product'])) {

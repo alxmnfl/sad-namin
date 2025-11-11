@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // Check if admin
 if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
@@ -7,11 +8,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
     exit();
 }
 
-$conn = new mysqli("localhost", "root", "", "hardware_db");
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-    exit();
-}
+$conn = getDatabaseConnection();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pid = intval($_POST['product_id']);
