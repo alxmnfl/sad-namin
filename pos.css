@@ -31,18 +31,22 @@ nav .logo {
   text-decoration: none;
 }
 
-    .onsite-btn {
-    background-color: #004080;
-    color: white;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    }
-    .onsite-btn:hover {
-    background-color: #0066cc;
-    }
+.onsite-btn {
+  background-color: #004080;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.onsite-btn:hover {
+  background-color: #0059b3;
+  transition: background 0.3s ease;
+}
 
 /* Back Button Style */
 .back-btn {
@@ -61,7 +65,6 @@ nav .logo {
   color: #fff;
 }
 
-
 /* PRODUCT SECTION */
 .container {
   display: flex;
@@ -70,119 +73,139 @@ nav .logo {
   margin-right: 360px; /* space for cart */
 }
 
-  form[method="GET"] {
-      margin: 0 0 20px 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: transparent;
-      padding: 0;
-    }
+form[method="GET"] {
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  padding: 0;
+}
 
-    form[method="GET"] label {
-      white-space: nowrap;
-      color: #004080;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
+form[method="GET"] label {
+  white-space: nowrap;
+  color: #004080;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
 
-    form[method="GET"] select {
-      flex: 0 1 200px;
-      margin: 0;
-      border: 1px solid #ccc;
-      background-color: white;
-      height: 40px;
-      font-size: 0.9rem;
-      color: #333;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23004080' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: calc(100% - 12px) center;
-      padding-right: 35px;
-      border-radius: 6px;
-      padding-left: 10px; 
-    } 
-    
-    form[method="GET"] select:focus {
-      border-color: #004080;
-      box-shadow: 0 0 0 2px rgba(0,64,128,0.1);
-      background-color: #fff;
-    }
-    .product-card {
-      width: 160px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      padding: 8px;
-      margin: 5px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-    }
+form[method="GET"] select {
+  flex: 0 1 200px;
+  margin: 0;
+  border: 1px solid #ccc;
+  background-color: white;
+  height: 40px;
+  font-size: 0.9rem;
+  color: #333;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23004080' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 12px) center;
+  padding-right: 35px;
+  border-radius: 6px;
+  padding-left: 10px;
+}
 
-    .product-card img,
-    .product-card .no-image {
-      width: 100%;
-      height: 120px;
-      display: block;
-      background: #f5f5f5;
-      margin-bottom: 8px;
-    }
+form[method="GET"] select:focus {
+  border-color: #004080;
+  box-shadow: 0 0 0 2px rgba(0,64,128,0.1);
+  background-color: #fff;
+}
 
-    .product-card .no-image {
-      background: #f5f5f5;
-      color: #666;
-      font-weight: normal;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-    }
+/* ✅ FIXED PRODUCT CARD SPACING */
+.product-card {
+  width: 160px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  padding: 10px;
+  margin: 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-    .product-card h3,
-    .product-card p {
-      text-align: center;
-      width: 100%;
-      margin: 5px 0;
-      font-size: 0.9rem;
-      padding: 0;
-    }
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
 
-    .product-footer {
-      color: #333;
-      width: 100%;
-      font-size: 0.9rem;
-      margin: 4px 0;
-    }
+.product-card img,
+.product-card .no-image {
+  width: 100%;
+  height: 140px;
+  display: block;
+  background: #f5f5f5;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  object-fit: cover;
+}
 
-    .product-footer strong {
-      color: #004080;
-      font-size: 0.95rem;
-      font-weight: 600;
-      display: block;
-    }
+.product-card .no-image {
+  color: #666;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
 
-    .add-cart-btn,
-    .product-card button {
-      background: #004080;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      padding: 6px 0;
-      font-weight: normal;
-      cursor: pointer;
-      margin: 4px 0 0 0;
-      width: 100%;
-      font-size: 0.9rem;
-    }
+.product-card h4 {
+  margin: 6px 0 2px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+}
 
-    .add-cart-btn:hover,
-    .product-card button:hover {
-      background: #003366;
-    }
+.product-card p {
+  margin: 2px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* ✅ Clean footer spacing fix */
+.product-footer {
+  color: #333;
+  width: 100%;
+  font-size: 0.9rem;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.product-footer strong {
+  color: #004080;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: block;
+}
+
+.add-cart-btn,
+.product-card button {
+  background: #004080;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 0;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.add-cart-btn:hover,
+.product-card button:hover {
+  background: #003366;
+}
 
 /* CART SIDEBAR */
 .cart-container {
@@ -262,12 +285,10 @@ nav .logo {
   background: #007bff;
 }
 
-
 /* FLOATING CART BUTTON (Visible only on mobile) */
 .floating-cart-btn {
   display: none; /* hidden on desktop */
 }
-
 
 @media (max-width: 768px) {
   .floating-cart-btn {

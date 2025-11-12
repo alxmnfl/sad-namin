@@ -62,7 +62,7 @@ if (isset($_POST['update_stock'])) {
 $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
 
 /* ---------------- LOW STOCK ALERT ---------------- */
-$low_stock = $conn->query("SELECT name, stock FROM products_ko WHERE stock <= 2 AND archive = 0");
+$low_stock = $conn->query("SELECT name, category, stock FROM products_ko WHERE stock <= 4 AND archive = 0");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -122,7 +122,11 @@ function closeAddProductModal() {
         <?php if ($low_stock && $low_stock->num_rows > 0): ?>
           <ul>
             <?php while ($item = $low_stock->fetch_assoc()): ?>
-              <li><strong><?= htmlspecialchars($item['name']) ?></strong> — only <span><?= $item['stock'] ?></span> left!</li>
+              <li>
+                <strong><?= htmlspecialchars($item['name']) ?></strong>
+                <small style="color:#666;">(<?= htmlspecialchars($item['category'] ?? 'Uncategorized') ?>)</small>
+                  — only <span><?= $item['stock'] ?></span> left!
+              </li>
             <?php endwhile; ?>
           </ul>
         <?php else: ?>

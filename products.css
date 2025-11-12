@@ -19,6 +19,8 @@ body {
   padding: 14px 24px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
   flex-wrap: wrap;
+  position: relative;
+  z-index: 10001; /* ✅ Keeps header above cart */
 }
 
 .header h3 {
@@ -62,6 +64,8 @@ body {
   padding: 8px 16px;
   transition: color 0.3s ease;
   font-size: 17px;
+  position: relative;
+  z-index: 10002; /* ✅ Ensures clickable even near cart */
 }
 
 .history-btn:hover,
@@ -73,23 +77,35 @@ body {
 /* --- Layout --- */
 .layout {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 40px;
   padding: 30px 60px;
   box-sizing: border-box;
   flex-wrap: wrap;
+  position: relative;
 }
 
+/* ✅ FIX ADDED HERE – prevents cart & history headers from hiding under navbar */
+.layout,
+.right-panel,
+.history-container,
+.history-panel {
+  margin-top: 80px !important;
+}
+
+/* Main product area */
 .left-panel {
   flex: 1;
-  min-width: 60%;
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
+/* Cart sidebar (fixed and always visible on desktop) */
 .right-panel {
   position: fixed;
   top: 0;
-  right: -340px;
+  right: 0;
   width: 340px;
   height: 100vh;
   background: #fff;
@@ -98,11 +114,14 @@ body {
   border-radius: 10px 0 0 10px;
   overflow-y: auto;
   transition: right 0.3s ease;
-  z-index: 9998;
+  z-index: 9997; /* ✅ Slightly lower than navbar so it doesn't block clicks */
 }
 
-.right-panel.active {
-  right: 0;
+/* When cart is open, shrink left panel on desktop only */
+@media (min-width: 993px) {
+  .layout.cart-open .left-panel {
+    max-width: calc(100% - 380px);
+  }
 }
 
 /* ===============================
@@ -318,7 +337,7 @@ form[method="GET"] select:focus {
   padding: 25px;
   overflow-y: auto;
   transition: right 0.3s ease-in-out;
-  z-index: 999;
+  z-index: 9999;
 }
 
 .history-container h3 {
@@ -414,66 +433,29 @@ form[method="GET"] select:focus {
 }
 
 /* ===============================
-   RESPONSIVE DESIGN
+   TRANSACTION HISTORY PANEL FIX
 =============================== */
+.history-panel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 380px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+  padding: 20px;
+  overflow-y: auto;
+  border-radius: 10px 0 0 10px;
+  transition: right 0.3s ease;
+  z-index: 9999;
+}
+
+.history-panel.active {
+  right: 0;
+}
+
 @media (max-width: 992px) {
-  .layout {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 25px;
-    padding: 20px;
-  }
-  .left-panel {
-    width: 100%;
-    min-width: unset;
-  }
-  .right-panel {
-    width: 90%;
-    right: -100%;
-  }
-  .right-panel.active {
-    right: 0;
-  }
-  .cart-float-btn {
-    display: flex;
-  }
-
-  /* History panel responsive fix */
-  .history-container {
+  .history-panel {
     width: 90%;
   }
-}
-
-@media (max-width: 600px) {
-  .layout { padding: 10px; gap: 15px; }
-  .header { flex-direction: column; align-items: flex-start; text-align: left; padding: 16px; }
-  .header h3 { font-size: 1.2rem; }
-  .top-right { width: 100%; justify-content: space-around; gap: 8px; padding-top: 8px; }
-  .home-btn, .history-btn, .logout-btn { font-size: 0.9rem; padding: 6px 10px; }
-  .product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-  .product-card img { height: 100px; }
-  .product-card h3 { font-size: 0.9rem; }
-  .product-footer { font-size: 0.8rem; padding: 6px; }
-  .cart-float-btn { bottom: 20px; right: 20px; width: 55px; height: 55px; font-size: 1.3rem; }
-  .right-panel { width: 100%; padding: 15px; }
-  .cart-header { font-size: 1rem; padding: 10px; }
-  .checkout-btn { font-size: 0.9rem; padding: 12px; }
-
-  /* History panel responsive fix for mobile */
-  .history-container {
-    width: 100%;
-    padding: 20px;
-  }
-  .close-btn {
-    top: 15px;
-    right: 15px;
-  }
-}
-
-@media (max-width: 400px) {
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .product-card h3, .product-footer { font-size: 0.8rem; }
-  .add-cart-btn { font-size: 0.8rem; padding: 5px 8px; }
-  .cart-float-btn { bottom: 18px; right: 18px; width: 50px; height: 50px; font-size: 1.2rem; }
-  .header h3 { font-size: 1rem; }
 }

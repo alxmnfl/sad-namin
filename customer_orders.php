@@ -20,7 +20,7 @@ $total_pages = ceil($total_records / $records_per_page);
 
 // Get paginated transactions
 $transactions_query = "SELECT * FROM transactions ORDER BY transaction_date DESC LIMIT $records_per_page OFFSET $offset";
-$transactions_result = mysqli_query($conn, $transactions_query);
+$transactions_result = mysqli_query($conn, "SELECT * FROM transactions WHERE source = 'online' ORDER BY transaction_date DESC LIMIT $records_per_page OFFSET $offset");
 
 $monthly_sales_query = "
   SELECT 
@@ -84,7 +84,7 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
       margin-bottom: 15px;
     }
 
-    .back-btn, .download-btn {
+    .back-btn, .download-btn, .onsite-btn {
       background-color: #004080;
       color: white;
       padding: 10px 20px;
@@ -97,7 +97,7 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
       transition: background 0.3s ease;
     }
 
-    .back-btn:hover, .download-btn:hover {
+    .back-btn:hover, .download-btn:hover, .onsite-btn:hover {
       background-color: #0059b3;
     }
 
@@ -241,6 +241,7 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
             <th>User ID</th>
             <th>Total Amount (₱)</th>
             <th>Transaction Date</th>
+            <th>Source</th>
           </tr>
         </thead>
         <tbody>
@@ -250,6 +251,7 @@ while ($row = mysqli_fetch_assoc($monthly_sales_result)) {
               <td><?= $transaction['user_id'] ?></td>
               <td>₱<?= number_format($transaction['total_amount'], 2) ?></td>
               <td><?= $transaction['transaction_date'] ?></td>
+              <td><?= htmlspecialchars($transaction['source']) ?></td>
             </tr>
           <?php } ?>
         </tbody>
