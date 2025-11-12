@@ -267,6 +267,33 @@ if ($transactions_result) {
             modalTotal.textContent = parseFloat(data.total).toFixed(2);
           }
           
+          // Handle checkout section
+          let checkoutSection = document.querySelector('.checkout-section');
+          const total = parseFloat(data.total.replace(/,/g, ''));
+          
+          if (total > 0) {
+            if (checkoutSection) {
+              // Update existing checkout section
+              const subtotalElement = checkoutSection.querySelector('.total-section p');
+              if (subtotalElement) {
+                subtotalElement.innerHTML = '<strong>Subtotal:</strong> ₱' + data.total;
+              }
+              checkoutSection.style.display = 'block';
+            } else {
+              // Create checkout section if it doesn't exist (guest user, first item)
+              const rightPanel = document.querySelector('.right-panel');
+              checkoutSection = document.createElement('div');
+              checkoutSection.className = 'checkout-section';
+              checkoutSection.innerHTML = `
+                <div class="total-section">
+                  <p><strong>Subtotal:</strong> ₱${data.total}</p>
+                </div>
+                <button type="button" onclick="openLoginModal()" class="checkout-btn" style="width: 100%;">Login to Checkout</button>
+              `;
+              rightPanel.appendChild(checkoutSection);
+            }
+          }
+          
           // Update cart badge
           updateCartBadge();
           
@@ -287,6 +314,93 @@ if ($transactions_result) {
       });
       
       return false;
+    }
+
+    // Guest Cart AJAX Update Function
+    function updateGuestCart(productId, action) {
+      fetch('guest_cart_ajax.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'product_id=' + productId + '&action=' + action
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update cart content without reload
+          document.querySelector('.cart-content').innerHTML = data.cart_html;
+          
+          // Handle checkout section
+          let checkoutSection = document.querySelector('.checkout-section');
+          const total = parseFloat(data.total.replace(/,/g, ''));
+          
+          if (total > 0) {
+            if (checkoutSection) {
+              // Update existing checkout section
+              const subtotalElement = checkoutSection.querySelector('.total-section p');
+              if (subtotalElement) {
+                subtotalElement.innerHTML = '<strong>Subtotal:</strong> ₱' + data.total;
+              }
+              checkoutSection.style.display = 'block';
+            } else {
+              // Create checkout section if it doesn't exist
+              const rightPanel = document.querySelector('.right-panel');
+              checkoutSection = document.createElement('div');
+              checkoutSection.className = 'checkout-section';
+              checkoutSection.innerHTML = `
+                <div class="total-section">
+                  <p><strong>Subtotal:</strong> ₱${data.total}</p>
+                </div>
+                <button type="button" onclick="openLoginModal()" class="checkout-btn" style="width: 100%;">Login to Checkout</button>
+              `;
+              rightPanel.appendChild(checkoutSection);
+            }
+          } else {
+            // Hide checkout section if cart is empty
+            if (checkoutSection) {
+              checkoutSection.style.display = 'none';
+            }
+          }
+          
+          // Reset button text if item was completely removed from cart
+          const cartContent = data.cart_html;
+          const productStillInCart = cartContent.includes('updateGuestCart(' + productId);
+          
+          console.log('Product ID:', productId);
+          console.log('Still in cart:', productStillInCart);
+          console.log('Cart HTML:', cartContent);
+          
+          if (!productStillInCart) {
+            // Product was removed from cart, reset ALL Add to Cart buttons for this product
+            // Find all forms with this product_id and reset their buttons
+            const forms = document.querySelectorAll('form');
+            console.log('Total forms found:', forms.length);
+            
+            forms.forEach(form => {
+              const productInput = form.querySelector('input[name="product_id"][value="' + productId + '"]');
+              if (productInput) {
+                console.log('Found matching form for product:', productId);
+                const addBtn = form.querySelector('.add-cart-btn');
+                console.log('Button found:', addBtn);
+                if (addBtn) {
+                  console.log('Button current text:', addBtn.textContent);
+                  console.log('Button current display:', window.getComputedStyle(addBtn).display);
+                  addBtn.textContent = 'Add to Cart';
+                  addBtn.classList.remove('btn-success');
+                  addBtn.style.display = ''; // Ensure it's visible
+                  console.log('Button reset to: Add to Cart');
+                }
+              }
+            });
+          }
+        } else {
+          console.error('Cart update failed:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
     }
 
     function showProductDetail(id, name, price, description, stock) {
@@ -483,7 +597,7 @@ if ($transactions_result) {
       if (!isset($_SESSION['username'])) {
           // Display temporary cart for non-logged-in users
           if (isset($_SESSION['temp_cart']) && !empty($_SESSION['temp_cart'])) {
-              foreach ($_SESSION['temp_cart'] as $cart_item) {
+              foreach ($_SESSION['temp_cart'] as $index => $cart_item) {
                   $pid = $cart_item['product_id'];
                   $result = $conn->query("SELECT name, price FROM products WHERE id = $pid");
                   if ($result && $row = $result->fetch_assoc()) {
@@ -496,7 +610,10 @@ if ($transactions_result) {
                               ₱<?= number_format($row['price'], 2) ?>
                           </div>
                           <div class="cart-controls">
-                              <span><?= $cart_item['quantity'] ?></span>
+                              <button class="qty-btn" onclick="updateGuestCart(<?= $pid ?>, 'decrease'); return false;">-</button>
+                              <span id="guest-qty-<?= $pid ?>"><?= $cart_item['quantity'] ?></span>
+                              <button class="qty-btn" onclick="updateGuestCart(<?= $pid ?>, 'increase'); return false;">+</button>
+                              <button class="remove-btn" onclick="updateGuestCart(<?= $pid ?>, 'remove'); return false;">×</button>
                           </div>
                       </div>
                       <?php
@@ -591,7 +708,7 @@ if ($transactions_result) {
         <button type="submit" name="checkout" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Complete Checkout</button>
       </form>
       <?php else: ?>
-      <button onclick="openLoginModal()" class="checkout-btn" style="width: 100%;">Login to Checkout</button>
+      <button type="button" onclick="openLoginModal()" class="checkout-btn" style="width: 100%;">Login to Checkout</button>
       <?php endif; ?>
     </div>
     <?php endif; ?>

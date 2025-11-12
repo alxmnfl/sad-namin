@@ -19,20 +19,24 @@ if (isset($_POST['product_id'])) {
         }
         
         $product_exists = false;
-        foreach ($_SESSION['temp_cart'] as &$item) {
+        $updated_cart = array();
+        
+        foreach ($_SESSION['temp_cart'] as $item) {
             if ($item['product_id'] == $product_id) {
                 $item['quantity']++;
                 $product_exists = true;
-                break;
             }
+            $updated_cart[] = $item;
         }
         
         if (!$product_exists) {
-            $_SESSION['temp_cart'][] = array(
+            $updated_cart[] = array(
                 'product_id' => $product_id,
                 'quantity' => 1
             );
         }
+        
+        $_SESSION['temp_cart'] = $updated_cart;
     } else {
         // If user is logged in, store cart in database
         $check = $conn->query("SELECT * FROM cart WHERE customer_id='$customer_id' AND product_id='$product_id'");
@@ -64,7 +68,10 @@ if (isset($_POST['product_id'])) {
                             ₱<?= number_format($row['price'], 2) ?>
                         </div>
                         <div class="cart-controls">
-                            <span><?= $cart_item['quantity'] ?></span>
+                            <button class="qty-btn" onclick="updateGuestCart(<?= $pid ?>, 'decrease'); return false;">-</button>
+                            <span id="guest-qty-<?= $pid ?>"><?= $cart_item['quantity'] ?></span>
+                            <button class="qty-btn" onclick="updateGuestCart(<?= $pid ?>, 'increase'); return false;">+</button>
+                            <button class="remove-btn" onclick="updateGuestCart(<?= $pid ?>, 'remove'); return false;">×</button>
                         </div>
                     </div>
                     <?php
