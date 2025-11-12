@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['temp_cart'])) {
     $_SESSION['temp_cart'] = array();

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
+header('Content-Type: application/json; charset=utf-8');
 
 // Check if admin
 if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {

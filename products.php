@@ -297,6 +297,9 @@ if ($transactions_result) {
           // Update cart badge
           updateCartBadge();
           
+          // Store in sessionStorage that this product is in cart
+          sessionStorage.setItem('product_' + productId + '_in_cart', 'true');
+          
           // Show brief success indication
           const btn = event.target;
           
@@ -367,32 +370,47 @@ if ($transactions_result) {
           const cartContent = data.cart_html;
           const productStillInCart = cartContent.includes('updateGuestCart(' + productId);
           
-          console.log('Product ID:', productId);
-          console.log('Still in cart:', productStillInCart);
-          console.log('Cart HTML:', cartContent);
-          
           if (!productStillInCart) {
-            // Product was removed from cart, reset ALL Add to Cart buttons for this product
-            // Find all forms with this product_id and reset their buttons
-            const forms = document.querySelectorAll('form');
-            console.log('Total forms found:', forms.length);
+            // Remove from sessionStorage
+            sessionStorage.removeItem('product_' + productId + '_in_cart');
             
-            forms.forEach(form => {
-              const productInput = form.querySelector('input[name="product_id"][value="' + productId + '"]');
-              if (productInput) {
-                console.log('Found matching form for product:', productId);
-                const addBtn = form.querySelector('.add-cart-btn');
-                console.log('Button found:', addBtn);
-                if (addBtn) {
-                  console.log('Button current text:', addBtn.textContent);
-                  console.log('Button current display:', window.getComputedStyle(addBtn).display);
-                  addBtn.textContent = 'Add to Cart';
-                  addBtn.classList.remove('btn-success');
-                  addBtn.style.display = ''; // Ensure it's visible
-                  console.log('Button reset to: Add to Cart');
+            // Reset button in the product grid
+            const productCard = document.querySelector('.product-card[data-product-id="' + productId + '"]');
+            
+            if (productCard) {
+              const form = productCard.querySelector('form');
+              
+              if (form) {
+                // Find or create the button
+                let addBtn = form.querySelector('.add-cart-btn');
+                
+                if (!addBtn) {
+                  // Button doesn't exist, recreate it
+                  addBtn = document.createElement('button');
+                  addBtn.type = 'submit';
+                  addBtn.className = 'add-cart-btn';
+                  addBtn.name = 'add_to_cart';
+                  form.appendChild(addBtn);
+                }
+                
+                addBtn.textContent = 'Add to Cart';
+                addBtn.classList.remove('btn-success');
+                addBtn.style.display = '';
+              }
+            }
+            
+            // Also reset button in detail panel if it's open
+            const detailPanel = document.getElementById('product-detail-panel');
+            if (detailPanel && detailPanel.style.display !== 'none') {
+              const detailBtn = detailPanel.querySelector('.detail-add-cart-btn');
+              if (detailBtn) {
+                const detailProductId = detailPanel.querySelector('input[name="product_id"]');
+                if (detailProductId && detailProductId.value == productId) {
+                  detailBtn.textContent = 'Add to Cart';
+                  detailBtn.classList.remove('btn-success');
                 }
               }
-            });
+            }
           }
         } else {
           console.error('Cart update failed:', data.message);
@@ -698,10 +716,10 @@ if ($transactions_result) {
 
         <div id="desktopDeliveryFields" style="display: none;">
           <div style="margin-bottom: 15px;">
-            <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+            <input type="text" name="delivery_address" autocomplete="street-address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
           </div>
           <div style="margin-bottom: 15px;">
-            <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+            <input type="text" name="contact_number" autocomplete="tel" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
           </div>
         </div>
 
@@ -748,10 +766,10 @@ if ($transactions_result) {
 
       <div id="deliveryFields" style="display: none;">
         <div style="margin-bottom: 15px;">
-          <input type="text" name="delivery_address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="text" name="delivery_address" autocomplete="street-address" placeholder="Enter Delivery Address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
         </div>
         <div style="margin-bottom: 15px;">
-          <input type="text" name="contact_number" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+          <input type="text" name="contact_number" autocomplete="tel" placeholder="Enter Contact Number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
         </div>
       </div>
 
@@ -836,6 +854,31 @@ function updateCartBadge() {
 
 // Update badge on page load
 document.addEventListener('DOMContentLoaded', updateCartBadge);
+
+// Initialize button states based on sessionStorage
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('form');
+  
+  forms.forEach(form => {
+    const productInput = form.querySelector('input[name="product_id"]');
+    if (productInput) {
+      const productId = productInput.value;
+      const inCart = sessionStorage.getItem('product_' + productId + '_in_cart');
+      const addBtn = form.querySelector('.add-cart-btn');
+      
+      if (addBtn) {
+        if (inCart === 'true') {
+          // Product is in cart, show "Added to cart"
+          addBtn.textContent = 'Added to cart';
+        } else {
+          // Product not in cart, show "Add to Cart"
+          addBtn.textContent = 'Add to Cart';
+          addBtn.classList.remove('btn-success');
+        }
+      }
+    }
+  });
+});
 
 function toggleHistory() {
   const historyPanel = document.getElementById('historyPanel');
@@ -1010,8 +1053,8 @@ function switchToLogin() {
       <span onclick="closeLoginModal()" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
     </div>
     <form method="POST" action="login.php">
-      <input type="text" name="username" placeholder="Username or Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="username" autocomplete="username" placeholder="Username or Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password" autocomplete="current-password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
       <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Login</button>
       <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="openSignupModal(); return false;" style="color: #004080; font-weight: bold;">Sign Up</a></p>
     </form>
@@ -1026,13 +1069,13 @@ function switchToLogin() {
       <span onclick="closeSignupModal()" style="position: absolute; top: -5px; right: -10px; font-size: 28px; cursor: pointer; color: #666;">&times;</span>
     </div>
     <form method="POST" action="register.php">
-      <input type="text" name="fname" placeholder="First Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="text" name="lname" placeholder="Last Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="text" name="address" placeholder="Address" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-      <input type="password" name="password_confirm" placeholder="Confirm Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="fname" autocomplete="given-name" placeholder="First Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="lname" autocomplete="family-name" placeholder="Last Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="address" autocomplete="street-address" placeholder="Address" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="email" name="email" autocomplete="email" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="text" name="username" autocomplete="username" placeholder="Username" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password" autocomplete="new-password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+      <input type="password" name="password_confirm" autocomplete="new-password" placeholder="Confirm Password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
       <button type="submit" style="width: 100%; padding: 12px; background: #004080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Create Account</button>
       <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="switchToLogin(); return false;" style="color: #004080; font-weight: bold;">Login</a></p>
     </form>

@@ -1,0 +1,19 @@
+# Set charset for CSS files
+<IfModule mod_mime.c>
+    AddType "text/css; charset=utf-8" .css
+    AddType "application/javascript; charset=utf-8" .js
+    AddType "text/html; charset=utf-8" .html
+    AddType "text/html; charset=utf-8" .php
+</IfModule>
+
+# Enable rewrite engine (if needed for future use)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    # Force UTF-8 encoding
+    Header set Content-Type "text/css; charset=utf-8" "expr=%{CONTENT_TYPE} =~ m#^text/css#"
+    Header set Content-Type "application/javascript; charset=utf-8" "expr=%{CONTENT_TYPE} =~ m#^application/javascript#"
+</IfModule>

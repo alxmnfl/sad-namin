@@ -2,7 +2,7 @@
 session_start();
 require_once 'config.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 // Initialize customer_id for guests
 $customer_id = isset($_SESSION['id']) ? $_SESSION['id'] : 0;
