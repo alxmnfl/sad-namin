@@ -62,7 +62,7 @@ if (isset($_POST['update_stock'])) {
 $products = $conn->query("SELECT * FROM products_ko WHERE archive = 0 ORDER BY id DESC");
 
 /* ---------------- LOW STOCK ALERT ---------------- */
-$low_stock = $conn->query("SELECT name, category, stock FROM products_ko WHERE stock <= 4 AND archive = 0");
+$low_stock = $conn->query("SELECT name, category, stock FROM products_ko WHERE stock <= 5 AND archive = 0");
 ?>
 <!DOCTYPE html>
 <html lang="en">
