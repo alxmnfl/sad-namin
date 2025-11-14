@@ -15,7 +15,7 @@
       <div class="logo"><strong>Abeth Hardware</strong></div>
       <div class="menu">
         <a href="#">Home</a>
-        <a href="#categories">Categories</a>
+        <a href="#category">Categories</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
 
@@ -40,7 +40,7 @@
       <?php endif; ?>
     </header>
 
-<h2 class="section-title">Category</h2>
+<h2 class="section-title" id="category">Category</h2>
 
 <div class="carousel-container">
   <div class="carousel">
